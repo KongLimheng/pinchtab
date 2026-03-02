@@ -1,15 +1,15 @@
-import { useEffect } from 'react'
-import { useAppStore } from '../stores/useAppStore'
-import { EmptyState } from '../components/atoms'
-import { AgentItem, ActivityLine } from '../components/molecules'
-import * as api from '../services/api'
+import { useEffect } from "react";
+import { useAppStore } from "../stores/useAppStore";
+import { EmptyState } from "../components/atoms";
+import { AgentItem, ActivityLine } from "../components/molecules";
+import * as api from "../services/api";
 
 const filters = [
-  { key: 'all', label: 'All' },
-  { key: 'navigate', label: 'Navigate' },
-  { key: 'snapshot', label: 'Snapshot' },
-  { key: 'action', label: 'Actions' },
-]
+  { key: "all", label: "All" },
+  { key: "navigate", label: "Navigate" },
+  { key: "snapshot", label: "Snapshot" },
+  { key: "action", label: "Actions" },
+];
 
 export default function AgentsPage() {
   const {
@@ -20,30 +20,30 @@ export default function AgentsPage() {
     setAgents,
     setSelectedAgentId,
     setEventFilter,
-  } = useAppStore()
+  } = useAppStore();
 
   const loadAgents = async () => {
     try {
-      const data = await api.fetchAgents()
-      setAgents(data)
+      const data = await api.fetchAgents();
+      setAgents(data);
     } catch (e) {
-      console.error('Failed to load agents', e)
+      console.error("Failed to load agents", e);
     }
-  }
+  };
 
   // Agents are loaded via SSE init event — only load if empty
   useEffect(() => {
     if (agents.length === 0) {
-      loadAgents()
+      loadAgents();
     }
-  }, [])
+  }, []);
 
   const filteredEvents = events.filter((e) => {
-    if (selectedAgentId && e.agentId !== selectedAgentId) return false
-    if (eventFilter === 'all') return true
-    if (eventFilter === 'action') return e.type === 'action'
-    return e.type === eventFilter
-  })
+    if (selectedAgentId && e.agentId !== selectedAgentId) return false;
+    if (eventFilter === "all") return true;
+    if (eventFilter === "action") return e.type === "action";
+    return e.type === eventFilter;
+  });
 
   return (
     <div className="flex flex-1">
@@ -58,7 +58,8 @@ export default function AgentsPage() {
               <div className="mb-2 text-2xl">🦀</div>
               No agents connected yet
               <div className="mt-1 text-xs">
-                Make an API call with <code className="text-primary">X-Agent-Id</code> header
+                Make an API call with{" "}
+                <code className="text-primary">X-Agent-Id</code> header
               </div>
             </div>
           ) : (
@@ -66,8 +67,8 @@ export default function AgentsPage() {
               <button
                 className={`rounded-lg px-3 py-2 text-left text-sm transition-all ${
                   !selectedAgentId
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-text-muted hover:bg-bg-elevated'
+                    ? "bg-primary/10 text-primary"
+                    : "text-text-muted hover:bg-bg-elevated"
                 }`}
                 onClick={() => setSelectedAgentId(null)}
               >
@@ -89,15 +90,17 @@ export default function AgentsPage() {
       {/* Activity feed */}
       <div className="flex flex-1 flex-col">
         <div className="flex items-center justify-between border-b border-border-subtle bg-bg-surface px-4 py-2">
-          <h2 className="text-sm font-semibold text-text-secondary">Activity Feed</h2>
+          <h2 className="text-sm font-semibold text-text-secondary">
+            Activity Feed
+          </h2>
           <div className="flex gap-1">
             {filters.map((f) => (
               <button
                 key={f.key}
                 className={`rounded px-2 py-1 text-xs font-medium transition-all ${
                   eventFilter === f.key
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-text-muted hover:bg-bg-elevated hover:text-text-secondary'
+                    ? "bg-primary/10 text-primary"
+                    : "text-text-muted hover:bg-bg-elevated hover:text-text-secondary"
                 }`}
                 onClick={() => setEventFilter(f.key)}
               >
@@ -118,5 +121,5 @@ export default function AgentsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

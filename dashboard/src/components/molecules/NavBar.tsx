@@ -1,52 +1,52 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { NavLink } from 'react-router-dom'
-import './NavBar.css'
+import { useCallback, useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router-dom";
+import "./NavBar.css";
 
 interface Tab {
-  id: string
-  path: string
-  label: string
+  id: string;
+  path: string;
+  label: string;
 }
 
 const tabs: Tab[] = [
-  { id: 'monitoring', path: '/monitoring', label: 'Monitoring' },
-  { id: 'agents', path: '/agents', label: 'Agents' },
-  { id: 'profiles', path: '/profiles', label: 'Profiles' },
-  { id: 'settings', path: '/settings', label: 'Settings' },
-]
+  { id: "monitoring", path: "/monitoring", label: "Monitoring" },
+  { id: "agents", path: "/agents", label: "Agents" },
+  { id: "profiles", path: "/profiles", label: "Profiles" },
+  { id: "settings", path: "/settings", label: "Settings" },
+];
 
 interface NavBarProps {
-  onRefresh?: () => void
+  onRefresh?: () => void;
 }
 
 export default function NavBar({ onRefresh }: NavBarProps) {
-  const [refreshing, setRefreshing] = useState(false)
-  const tabsRef = useRef<HTMLElement>(null)
+  const [refreshing, setRefreshing] = useState(false);
+  const tabsRef = useRef<HTMLElement>(null);
 
   const handleRefresh = useCallback(() => {
-    if (!onRefresh || refreshing) return
-    setRefreshing(true)
-    onRefresh()
-    setTimeout(() => setRefreshing(false), 800)
-  }, [onRefresh, refreshing])
+    if (!onRefresh || refreshing) return;
+    setRefreshing(true);
+    onRefresh();
+    setTimeout(() => setRefreshing(false), 800);
+  }, [onRefresh, refreshing]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (!e.metaKey && !e.ctrlKey) return
-      const num = parseInt(e.key)
+      if (!e.metaKey && !e.ctrlKey) return;
+      const num = parseInt(e.key);
       if (num >= 1 && num <= tabs.length) {
-        e.preventDefault()
-        window.location.hash = tabs[num - 1].path
-        return
+        e.preventDefault();
+        window.location.hash = tabs[num - 1].path;
+        return;
       }
-      if (e.key === 'r' && onRefresh) {
-        e.preventDefault()
-        handleRefresh()
+      if (e.key === "r" && onRefresh) {
+        e.preventDefault();
+        handleRefresh();
       }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [onRefresh, handleRefresh])
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onRefresh, handleRefresh]);
 
   return (
     <header className="sticky top-0 z-50 flex h-[52px] items-center gap-0 border-b border-border-subtle bg-bg-app px-4">
@@ -61,7 +61,7 @@ export default function NavBar({ onRefresh }: NavBarProps) {
             to={tab.path}
             className={({ isActive }) =>
               `navbar-tab relative cursor-pointer border-none bg-transparent px-3.5 py-3.5 text-sm font-medium leading-none whitespace-nowrap transition-colors duration-150 hover:text-text-primary focus-visible:rounded focus-visible:shadow-[0_0_0_2px_var(--primary)/25] focus-visible:outline-none ${
-                isActive ? 'active text-text-primary' : 'text-text-secondary'
+                isActive ? "active text-text-primary" : "text-text-secondary"
               }`
             }
             title={`${tab.label} (⌘${i + 1})`}
@@ -75,7 +75,7 @@ export default function NavBar({ onRefresh }: NavBarProps) {
         {onRefresh && (
           <button
             className={`navbar-icon-btn flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-transparent bg-transparent text-base text-text-muted transition-all duration-150 hover:border-border-subtle hover:bg-bg-elevated hover:text-text-secondary focus-visible:shadow-[0_0_0_2px_var(--primary)/25] focus-visible:outline-none ${
-              refreshing ? 'spinning' : ''
+              refreshing ? "spinning" : ""
             }`}
             onClick={handleRefresh}
             title="Refresh (⌘R)"
@@ -85,5 +85,5 @@ export default function NavBar({ onRefresh }: NavBarProps) {
         )}
       </div>
     </header>
-  )
+  );
 }

@@ -1,11 +1,16 @@
 interface Props {
-  icon?: string
-  title: string
-  description?: string
-  action?: React.ReactNode
+  icon?: string;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
 }
 
-export default function EmptyState({ icon = '🦀', title, description, action }: Props) {
+export default function EmptyState({
+  icon = "🦀",
+  title,
+  description,
+  action,
+}: Props) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="mb-3 text-5xl">{icon}</div>
@@ -15,5 +20,5 @@ export default function EmptyState({ icon = '🦀', title, description, action }
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
-  )
+  );
 }

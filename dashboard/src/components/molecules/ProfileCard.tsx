@@ -1,12 +1,12 @@
-import { Card, Badge, Button } from '../atoms'
-import type { Profile, Instance } from '../../types'
+import { Card, Badge, Button } from "../atoms";
+import type { Profile, Instance } from "../../types";
 
 interface Props {
-  profile: Profile
-  instance?: Instance
-  onLaunch: () => void
-  onStop?: () => void
-  onDetails?: () => void
+  profile: Profile;
+  instance?: Instance;
+  onLaunch: () => void;
+  onStop?: () => void;
+  onDetails?: () => void;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -15,7 +15,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <span className="text-text-muted">{label}</span>
       <span className="text-text-secondary">{value}</span>
     </div>
-  )
+  );
 }
 
 export default function ProfileCard({
@@ -25,10 +25,10 @@ export default function ProfileCard({
   onStop,
   onDetails,
 }: Props) {
-  const isRunning = instance?.status === 'running'
-  const isError = instance?.status === 'error'
-  const accountText = profile.accountEmail || profile.accountName || '—'
-  const sizeText = profile.sizeMB ? `${profile.sizeMB.toFixed(0)} MB` : '—'
+  const isRunning = instance?.status === "running";
+  const isError = instance?.status === "error";
+  const accountText = profile.accountEmail || profile.accountName || "—";
+  const sizeText = profile.sizeMB ? `${profile.sizeMB.toFixed(0)} MB` : "—";
 
   return (
     <Card hover className="flex flex-col">
@@ -81,5 +81,5 @@ export default function ProfileCard({
         )}
       </div>
     </Card>
-  )
+  );
 }

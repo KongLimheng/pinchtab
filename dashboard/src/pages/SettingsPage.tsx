@@ -1,41 +1,44 @@
-import { useEffect, useState } from 'react'
-import { useAppStore } from '../stores/useAppStore'
-import { Button, Card } from '../components/atoms'
-import * as api from '../services/api'
-import type { Settings } from '../types'
+import { useEffect, useState } from "react";
+import { useAppStore } from "../stores/useAppStore";
+import { Button, Card } from "../components/atoms";
+import * as api from "../services/api";
+import type { Settings } from "../types";
 
 export default function SettingsPage() {
-  const { settings, serverInfo, setSettings, setServerInfo } = useAppStore()
-  const [local, setLocal] = useState<Settings>(settings)
-  const [saving, setSaving] = useState(false)
+  const { settings, serverInfo, setSettings, setServerInfo } = useAppStore();
+  const [local, setLocal] = useState<Settings>(settings);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, h] = await Promise.all([api.fetchSettings(), api.fetchHealth()])
-        setSettings(s)
-        setLocal(s)
-        setServerInfo(h)
+        const [s, h] = await Promise.all([
+          api.fetchSettings(),
+          api.fetchHealth(),
+        ]);
+        setSettings(s);
+        setLocal(s);
+        setServerInfo(h);
       } catch (e) {
-        console.error('Failed to load settings', e)
+        console.error("Failed to load settings", e);
       }
-    }
-    load()
-  }, [])
+    };
+    load();
+  }, []);
 
   const handleSave = async () => {
-    setSaving(true)
+    setSaving(true);
     try {
-      const updated = await api.updateSettings(local)
-      setSettings(updated)
+      const updated = await api.updateSettings(local);
+      setSettings(updated);
     } catch (e) {
-      console.error('Failed to save settings', e)
+      console.error("Failed to save settings", e);
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  const handleReset = () => setLocal(settings)
+  const handleReset = () => setLocal(settings);
 
   return (
     <div className="flex flex-1 flex-col overflow-auto">
@@ -44,14 +47,16 @@ export default function SettingsPage() {
           Reset
         </Button>
         <Button variant="primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving...' : 'Apply Settings'}
+          {saving ? "Saving..." : "Apply Settings"}
         </Button>
       </div>
 
       <div className="mx-auto w-full max-w-2xl space-y-6 p-6">
         {/* Screencast */}
         <Card className="p-4">
-          <h3 className="mb-4 text-sm font-semibold text-text-primary">📺 Screencast</h3>
+          <h3 className="mb-4 text-sm font-semibold text-text-primary">
+            📺 Screencast
+          </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <label className="text-sm text-text-secondary">Frame Rate</label>
@@ -85,7 +90,10 @@ export default function SettingsPage() {
                   onChange={(e) =>
                     setLocal({
                       ...local,
-                      screencast: { ...local.screencast, quality: +e.target.value },
+                      screencast: {
+                        ...local.screencast,
+                        quality: +e.target.value,
+                      },
                     })
                   }
                   className="w-32"
@@ -102,7 +110,10 @@ export default function SettingsPage() {
                 onChange={(e) =>
                   setLocal({
                     ...local,
-                    screencast: { ...local.screencast, maxWidth: +e.target.value },
+                    screencast: {
+                      ...local.screencast,
+                      maxWidth: +e.target.value,
+                    },
                   })
                 }
                 className="rounded border border-border-default bg-bg-elevated px-2 py-1 text-sm text-text-primary"
@@ -119,12 +130,19 @@ export default function SettingsPage() {
 
         {/* Stealth */}
         <Card className="p-4">
-          <h3 className="mb-4 text-sm font-semibold text-text-primary">🛡️ Stealth</h3>
+          <h3 className="mb-4 text-sm font-semibold text-text-primary">
+            🛡️ Stealth
+          </h3>
           <div className="flex items-center justify-between">
             <label className="text-sm text-text-secondary">Level</label>
             <select
               value={local.stealth}
-              onChange={(e) => setLocal({ ...local, stealth: e.target.value as 'light' | 'full' })}
+              onChange={(e) =>
+                setLocal({
+                  ...local,
+                  stealth: e.target.value as "light" | "full",
+                })
+              }
               className="rounded border border-border-default bg-bg-elevated px-2 py-1 text-sm text-text-primary"
             >
               <option value="light">Light (default)</option>
@@ -135,12 +153,14 @@ export default function SettingsPage() {
 
         {/* Browser */}
         <Card className="p-4">
-          <h3 className="mb-4 text-sm font-semibold text-text-primary">🌐 Browser</h3>
+          <h3 className="mb-4 text-sm font-semibold text-text-primary">
+            🌐 Browser
+          </h3>
           <div className="space-y-3">
             {[
-              { key: 'blockImages', label: 'Block Images' },
-              { key: 'blockMedia', label: 'Block Media' },
-              { key: 'noAnimations', label: 'No Animations' },
+              { key: "blockImages", label: "Block Images" },
+              { key: "blockMedia", label: "Block Media" },
+              { key: "noAnimations", label: "No Animations" },
             ].map(({ key, label }) => (
               <label key={key} className="flex items-center justify-between">
                 <span className="text-sm text-text-secondary">{label}</span>
@@ -163,7 +183,9 @@ export default function SettingsPage() {
         {/* Server Info */}
         {serverInfo && (
           <Card className="p-4">
-            <h3 className="mb-4 text-sm font-semibold text-text-primary">📊 Server Info</h3>
+            <h3 className="mb-4 text-sm font-semibold text-text-primary">
+              📊 Server Info
+            </h3>
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-text-muted">Version</div>
               <div className="text-text-secondary">{serverInfo.version}</div>
@@ -178,5 +200,5 @@ export default function SettingsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

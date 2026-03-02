@@ -1,19 +1,24 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Modal, Button, Input } from '../atoms'
-import ScreencastTile from './ScreencastTile'
-import TabItem from './TabItem'
-import type { Profile, Instance, InstanceTab, Agent } from '../../generated/types'
-import * as api from '../../services/api'
+import { useState, useEffect, useCallback } from "react";
+import { Modal, Button, Input } from "../atoms";
+import ScreencastTile from "./ScreencastTile";
+import TabItem from "./TabItem";
+import type {
+  Profile,
+  Instance,
+  InstanceTab,
+  Agent,
+} from "../../generated/types";
+import * as api from "../../services/api";
 
 interface Props {
-  profile: Profile | null
-  instance?: Instance
-  onClose: () => void
-  onSave?: (name: string, useWhen: string) => void
-  onDelete?: () => void
+  profile: Profile | null;
+  instance?: Instance;
+  onClose: () => void;
+  onSave?: (name: string, useWhen: string) => void;
+  onDelete?: () => void;
 }
 
-type TabId = 'profile' | 'live' | 'logs'
+type TabId = "profile" | "live" | "logs";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -21,7 +26,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <span className="text-text-muted">{label}</span>
       <span className="text-text-primary">{value}</span>
     </div>
-  )
+  );
 }
 
 export default function ProfileDetailsModal({
@@ -31,74 +36,74 @@ export default function ProfileDetailsModal({
   onSave,
   onDelete,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<TabId>('profile')
-  const [name, setName] = useState('')
-  const [useWhen, setUseWhen] = useState('')
-  const [tabs, setTabs] = useState<InstanceTab[]>([])
-  const [agents, setAgents] = useState<Agent[]>([])
-  const [logs] = useState('')  // TODO: fetch from /instances/{id}/logs
-  const [copyFeedback, setCopyFeedback] = useState('')
+  const [activeTab, setActiveTab] = useState<TabId>("profile");
+  const [name, setName] = useState("");
+  const [useWhen, setUseWhen] = useState("");
+  const [tabs, setTabs] = useState<InstanceTab[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [logs] = useState(""); // TODO: fetch from /instances/{id}/logs
+  const [copyFeedback, setCopyFeedback] = useState("");
 
-  const isRunning = instance?.status === 'running'
+  const isRunning = instance?.status === "running";
 
-  // Initialize form values
+  // Initialize form values when profile changes
   useEffect(() => {
     if (profile) {
-      setName(profile.name)
-      setUseWhen(profile.useWhen || '')
+      setName(profile.name);
+      setUseWhen(profile.useWhen || "");
     }
-  }, [profile])
+  }, [profile]);
 
   // Load live data when switching to live/logs tab
   const loadLiveData = useCallback(async () => {
-    if (!instance?.id) return
+    if (!instance?.id) return;
 
     try {
       const [allTabs, agentsData] = await Promise.all([
         api.fetchAllTabs().catch(() => []),
         api.fetchAgents().catch(() => []),
-      ])
+      ]);
       // Filter tabs for this instance
       const instanceTabs = Array.isArray(allTabs)
         ? allTabs.filter((t) => t.instanceId === instance.id)
-        : []
-      setTabs(instanceTabs)
-      setAgents(agentsData.filter((a) => a.name === profile?.name))
+        : [];
+      setTabs(instanceTabs);
+      setAgents(agentsData.filter((a) => a.name === profile?.name));
     } catch (e) {
-      console.error('Failed to load live data', e)
+      console.error("Failed to load live data", e);
     }
-  }, [instance?.id, profile?.name])
+  }, [instance, profile?.name]);
 
   useEffect(() => {
-    if (activeTab === 'live' || activeTab === 'logs') {
-      loadLiveData()
+    if (activeTab === "live" || activeTab === "logs") {
+      loadLiveData();
     }
-  }, [activeTab, loadLiveData])
+  }, [activeTab, loadLiveData]);
 
   const handleCopyId = async () => {
-    if (!profile?.id) return
+    if (!profile?.id) return;
     try {
-      await navigator.clipboard.writeText(profile.id)
-      setCopyFeedback('Copied!')
-      setTimeout(() => setCopyFeedback(''), 2000)
+      await navigator.clipboard.writeText(profile.id);
+      setCopyFeedback("Copied!");
+      setTimeout(() => setCopyFeedback(""), 2000);
     } catch {
-      setCopyFeedback('Failed')
-      setTimeout(() => setCopyFeedback(''), 2000)
+      setCopyFeedback("Failed");
+      setTimeout(() => setCopyFeedback(""), 2000);
     }
-  }
+  };
 
   const handleSave = () => {
-    onSave?.(name, useWhen)
-  }
+    onSave?.(name, useWhen);
+  };
 
-  if (!profile) return null
+  if (!profile) return null;
 
   const tabClasses = (id: TabId) =>
     `flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
       activeTab === id
-        ? 'border-primary text-text-primary'
-        : 'border-transparent text-text-muted hover:text-text-secondary'
-    }`
+        ? "border-primary text-text-primary"
+        : "border-transparent text-text-muted hover:text-text-secondary"
+    }`;
 
   return (
     <Modal
@@ -124,32 +129,43 @@ export default function ProfileDetailsModal({
     >
       {/* Tabs */}
       <div className="-mx-4 -mt-2 mb-4 flex border-b border-border-subtle px-4">
-        <button className={tabClasses('profile')} onClick={() => setActiveTab('profile')}>
+        <button
+          className={tabClasses("profile")}
+          onClick={() => setActiveTab("profile")}
+        >
           Profile
         </button>
-        <button className={tabClasses('live')} onClick={() => setActiveTab('live')}>
+        <button
+          className={tabClasses("live")}
+          onClick={() => setActiveTab("live")}
+        >
           Live
         </button>
-        <button className={tabClasses('logs')} onClick={() => setActiveTab('logs')}>
+        <button
+          className={tabClasses("logs")}
+          onClick={() => setActiveTab("logs")}
+        >
           Logs
         </button>
       </div>
 
       {/* Tab Content */}
       <div className="min-h-[400px]">
-        {activeTab === 'profile' && (
+        {activeTab === "profile" && (
           <div className="flex flex-col gap-4">
             {/* Profile ID */}
             <div>
-              <label className="mb-1 block text-xs text-text-muted">Profile ID</label>
+              <label className="mb-1 block text-xs text-text-muted">
+                Profile ID
+              </label>
               <div className="flex gap-2">
                 <input
                   readOnly
-                  value={profile.id || '—'}
+                  value={profile.id || "—"}
                   className="flex-1 rounded border border-border-subtle bg-bg-elevated px-3 py-2 font-mono text-xs text-text-secondary"
                 />
                 <Button size="sm" variant="secondary" onClick={handleCopyId}>
-                  {copyFeedback || 'Copy'}
+                  {copyFeedback || "Copy"}
                 </Button>
               </div>
             </div>
@@ -179,15 +195,23 @@ export default function ProfileDetailsModal({
                 Status
               </h4>
               <div className="space-y-1">
-                <InfoRow label="State" value={instance?.status || 'stopped'} />
-                <InfoRow label="Port" value={instance?.port || '—'} />
-                <InfoRow label="Size" value={profile.sizeMB ? `${profile.sizeMB.toFixed(0)} MB` : '—'} />
-                <InfoRow label="Source" value={profile.source || '—'} />
+                <InfoRow label="State" value={instance?.status || "stopped"} />
+                <InfoRow label="Port" value={instance?.port || "—"} />
+                <InfoRow
+                  label="Size"
+                  value={
+                    profile.sizeMB ? `${profile.sizeMB.toFixed(0)} MB` : "—"
+                  }
+                />
+                <InfoRow label="Source" value={profile.source || "—"} />
                 {profile.chromeProfileName && (
                   <InfoRow label="Chrome" value={profile.chromeProfileName} />
                 )}
                 {(profile.accountEmail || profile.accountName) && (
-                  <InfoRow label="Account" value={profile.accountEmail || profile.accountName || ''} />
+                  <InfoRow
+                    label="Account"
+                    value={profile.accountEmail || profile.accountName || ""}
+                  />
                 )}
               </div>
             </div>
@@ -198,21 +222,25 @@ export default function ProfileDetailsModal({
                 <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
                   Path
                 </h4>
-                <code className={`text-xs ${profile.pathExists ? 'text-text-secondary' : 'text-destructive'}`}>
+                <code
+                  className={`text-xs ${profile.pathExists ? "text-text-secondary" : "text-destructive"}`}
+                >
                   {profile.path}
-                  {!profile.pathExists && ' (not found)'}
+                  {!profile.pathExists && " (not found)"}
                 </code>
               </div>
             )}
           </div>
         )}
 
-        {activeTab === 'live' && (
+        {activeTab === "live" && (
           <div>
             {isRunning && instance ? (
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm text-text-muted">{tabs.length} tab(s)</span>
+                  <span className="text-sm text-text-muted">
+                    {tabs.length} tab(s)
+                  </span>
                   <Button size="sm" variant="secondary" onClick={loadLiveData}>
                     Refresh
                   </Button>
@@ -243,7 +271,7 @@ export default function ProfileDetailsModal({
           </div>
         )}
 
-        {activeTab === 'logs' && (
+        {activeTab === "logs" && (
           <div className="space-y-4">
             {/* Tabs */}
             <div>
@@ -252,7 +280,7 @@ export default function ProfileDetailsModal({
               </h4>
               {tabs.length === 0 ? (
                 <p className="text-sm text-text-muted">
-                  {isRunning ? 'No tabs open.' : 'Instance not running.'}
+                  {isRunning ? "No tabs open." : "Instance not running."}
                 </p>
               ) : (
                 <div className="space-y-1">
@@ -291,13 +319,14 @@ export default function ProfileDetailsModal({
                   {logs}
                 </pre>
               ) : (
-                <p className="text-sm text-text-muted">No instance logs available.</p>
+                <p className="text-sm text-text-muted">
+                  No instance logs available.
+                </p>
               )}
             </div>
           </div>
         )}
       </div>
-
     </Modal>
-  )
+  );
 }

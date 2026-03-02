@@ -1,9 +1,9 @@
-import { useEffect, useState, useMemo } from 'react'
-import { useAppStore } from '../stores/useAppStore'
-import { Toolbar, EmptyState, Button, Modal, Input } from '../components/atoms'
-import { ProfileCard, ProfileDetailsModal } from '../components/molecules'
-import * as api from '../services/api'
-import type { Profile } from '../generated/types'
+import { useEffect, useState, useMemo } from "react";
+import { useAppStore } from "../stores/useAppStore";
+import { Toolbar, EmptyState, Button, Modal, Input } from "../components/atoms";
+import { ProfileCard, ProfileDetailsModal } from "../components/molecules";
+import * as api from "../services/api";
+import type { Profile } from "../generated/types";
 
 export default function ProfilesPage() {
   const {
@@ -13,130 +13,130 @@ export default function ProfilesPage() {
     setProfiles,
     setProfilesLoading,
     setInstances,
-  } = useAppStore()
-  const [showCreate, setShowCreate] = useState(false)
-  const [showLaunch, setShowLaunch] = useState<string | null>(null)
-  const [showDetails, setShowDetails] = useState<Profile | null>(null)
+  } = useAppStore();
+  const [showCreate, setShowCreate] = useState(false);
+  const [showLaunch, setShowLaunch] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState<Profile | null>(null);
 
   // Create form
-  const [createName, setCreateName] = useState('')
-  const [createUseWhen, setCreateUseWhen] = useState('')
-  const [createSource, setCreateSource] = useState('')
+  const [createName, setCreateName] = useState("");
+  const [createUseWhen, setCreateUseWhen] = useState("");
+  const [createSource, setCreateSource] = useState("");
 
   // Launch form
-  const [launchPort, setLaunchPort] = useState('9868')
-  const [launchHeadless, setLaunchHeadless] = useState(false)
-  const [copyFeedback, setCopyFeedback] = useState('')
+  const [launchPort, setLaunchPort] = useState("9868");
+  const [launchHeadless, setLaunchHeadless] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState("");
 
   const loadProfiles = async () => {
-    setProfilesLoading(true)
+    setProfilesLoading(true);
     try {
-      const data = await api.fetchProfiles()
-      setProfiles(data)
+      const data = await api.fetchProfiles();
+      setProfiles(data);
     } catch (e) {
-      console.error('Failed to load profiles', e)
+      console.error("Failed to load profiles", e);
     } finally {
-      setProfilesLoading(false)
+      setProfilesLoading(false);
     }
-  }
+  };
 
   // Only load on mount if empty — SSE handles updates
   useEffect(() => {
     if (profiles.length === 0) {
-      loadProfiles()
+      loadProfiles();
     }
-  }, [])
+  }, []);
 
   const handleCreate = async () => {
-    if (!createName.trim()) return
+    if (!createName.trim()) return;
     try {
       await api.createProfile({
         name: createName.trim(),
         useWhen: createUseWhen.trim() || undefined,
-      })
-      setShowCreate(false)
-      setCreateName('')
-      setCreateUseWhen('')
-      setCreateSource('')
-      loadProfiles()
+      });
+      setShowCreate(false);
+      setCreateName("");
+      setCreateUseWhen("");
+      setCreateSource("");
+      loadProfiles();
     } catch (e) {
-      console.error('Failed to create profile', e)
+      console.error("Failed to create profile", e);
     }
-  }
+  };
 
   const handleLaunch = async () => {
-    if (!showLaunch) return
+    if (!showLaunch) return;
     try {
       await api.launchInstance({
         name: showLaunch,
-        port: launchPort || '9868',
-        mode: launchHeadless ? '' : 'headed',
-      })
-      setShowLaunch(null)
-      setLaunchPort('9868')
-      setLaunchHeadless(false)
+        port: launchPort || "9868",
+        mode: launchHeadless ? "" : "headed",
+      });
+      setShowLaunch(null);
+      setLaunchPort("9868");
+      setLaunchHeadless(false);
     } catch (e) {
-      console.error('Failed to launch instance', e)
+      console.error("Failed to launch instance", e);
     }
-  }
+  };
 
   const handleStop = async (profileName: string) => {
-    const inst = instanceByProfile.get(profileName)
-    if (!inst) return
+    const inst = instanceByProfile.get(profileName);
+    if (!inst) return;
     try {
-      await api.stopInstance(inst.id)
-      const updated = await api.fetchInstances()
-      setInstances(updated)
+      await api.stopInstance(inst.id);
+      const updated = await api.fetchInstances();
+      setInstances(updated);
     } catch (e) {
-      console.error('Failed to stop instance', e)
+      console.error("Failed to stop instance", e);
     }
-  }
+  };
 
   const handleDelete = async () => {
-    if (!showDetails?.id) return
+    if (!showDetails?.id) return;
     try {
-      await api.deleteProfile(showDetails.id)
-      setShowDetails(null)
-      loadProfiles()
+      await api.deleteProfile(showDetails.id);
+      setShowDetails(null);
+      loadProfiles();
     } catch (e) {
-      console.error('Failed to delete profile', e)
+      console.error("Failed to delete profile", e);
     }
-  }
+  };
 
   // Generate launch command
   const launchCommand = useMemo(() => {
-    if (!showLaunch) return ''
-    const profile = profiles.find((p) => p.name === showLaunch)
-    const profileId = profile?.id || showLaunch
-    const mode = launchHeadless ? 'headless' : 'headed'
-    const port = launchPort || 'auto'
-    return `curl -X POST http://localhost:9867/instances/start -H "Content-Type: application/json" -d '{"profileId":"${profileId}","mode":"${mode}","port":"${port}"}'`
-  }, [showLaunch, launchHeadless, launchPort, profiles])
+    if (!showLaunch) return "";
+    const profile = profiles.find((p) => p.name === showLaunch);
+    const profileId = profile?.id || showLaunch;
+    const mode = launchHeadless ? "headless" : "headed";
+    const port = launchPort || "auto";
+    return `curl -X POST http://localhost:9867/instances/start -H "Content-Type: application/json" -d '{"profileId":"${profileId}","mode":"${mode}","port":"${port}"}'`;
+  }, [showLaunch, launchHeadless, launchPort, profiles]);
 
   const handleCopyCommand = async () => {
     try {
-      await navigator.clipboard.writeText(launchCommand)
-      setCopyFeedback('Copied!')
-      setTimeout(() => setCopyFeedback(''), 2000)
+      await navigator.clipboard.writeText(launchCommand);
+      setCopyFeedback("Copied!");
+      setTimeout(() => setCopyFeedback(""), 2000);
     } catch {
-      setCopyFeedback('Failed to copy')
-      setTimeout(() => setCopyFeedback(''), 2000)
+      setCopyFeedback("Failed to copy");
+      setTimeout(() => setCopyFeedback(""), 2000);
     }
-  }
+  };
 
-  const instanceByProfile = new Map(instances.map((i) => [i.profileName, i]))
+  const instanceByProfile = new Map(instances.map((i) => [i.profileName, i]));
 
   return (
     <div className="flex flex-1 flex-col">
       <Toolbar
         actions={[
           {
-            key: 'new',
-            label: '+ New Profile',
+            key: "new",
+            label: "+ New Profile",
             onClick: () => setShowCreate(true),
-            variant: 'primary',
+            variant: "primary",
           },
-          { key: 'refresh', label: 'Refresh', onClick: loadProfiles },
+          { key: "refresh", label: "Refresh", onClick: loadProfiles },
         ]}
       />
 
@@ -272,10 +272,12 @@ export default function ProfilesPage() {
       {/* Profile Details Modal */}
       <ProfileDetailsModal
         profile={showDetails}
-        instance={showDetails ? instanceByProfile.get(showDetails.name) : undefined}
+        instance={
+          showDetails ? instanceByProfile.get(showDetails.name) : undefined
+        }
         onClose={() => setShowDetails(null)}
         onDelete={handleDelete}
       />
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect, beforeAll } from 'vitest'
-import TabsChart from './TabsChart'
-import type { TabDataPoint } from '../../stores/useAppStore'
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect, beforeAll } from "vitest";
+import TabsChart from "./TabsChart";
+import type { TabDataPoint } from "../../stores/useAppStore";
 
 // Mock ResizeObserver for Recharts ResponsiveContainer
 beforeAll(() => {
@@ -10,22 +10,22 @@ beforeAll(() => {
     unobserve() {}
     disconnect() {}
   }
-  window.ResizeObserver = ResizeObserverMock as any
-})
+  window.ResizeObserver = ResizeObserverMock as any;
+});
 
 const mockInstances = [
-  { id: 'inst_1', profileName: 'profile-1' },
-  { id: 'inst_2', profileName: 'profile-2' },
-]
+  { id: "inst_1", profileName: "profile-1" },
+  { id: "inst_2", profileName: "profile-2" },
+];
 
 const mockData: TabDataPoint[] = [
   { timestamp: Date.now() - 60000, inst_1: 3, inst_2: 5 },
   { timestamp: Date.now() - 30000, inst_1: 4, inst_2: 6 },
   { timestamp: Date.now(), inst_1: 5, inst_2: 4 },
-]
+];
 
-describe('TabsChart', () => {
-  describe('empty states', () => {
+describe("TabsChart", () => {
+  describe("empty states", () => {
     it('shows "No running instances" when instances array is empty', () => {
       render(
         <TabsChart
@@ -33,10 +33,10 @@ describe('TabsChart', () => {
           instances={[]}
           selectedInstanceId={null}
           onSelectInstance={() => {}}
-        />
-      )
-      expect(screen.getByText('No running instances')).toBeInTheDocument()
-    })
+        />,
+      );
+      expect(screen.getByText("No running instances")).toBeInTheDocument();
+    });
 
     it('shows "Collecting data..." when data array is empty', () => {
       render(
@@ -45,10 +45,10 @@ describe('TabsChart', () => {
           instances={mockInstances}
           selectedInstanceId={null}
           onSelectInstance={() => {}}
-        />
-      )
-      expect(screen.getByText('Collecting data...')).toBeInTheDocument()
-    })
+        />,
+      );
+      expect(screen.getByText("Collecting data...")).toBeInTheDocument();
+    });
 
     it('shows "No running instances" when both are empty (instances takes priority)', () => {
       render(
@@ -57,24 +57,26 @@ describe('TabsChart', () => {
           instances={[]}
           selectedInstanceId={null}
           onSelectInstance={() => {}}
-        />
-      )
-      expect(screen.getByText('No running instances')).toBeInTheDocument()
-    })
-  })
+        />,
+      );
+      expect(screen.getByText("No running instances")).toBeInTheDocument();
+    });
+  });
 
-  describe('chart rendering', () => {
-    it('renders chart container when data and instances exist', () => {
+  describe("chart rendering", () => {
+    it("renders chart container when data and instances exist", () => {
       const { container } = render(
         <TabsChart
           data={mockData}
           instances={mockInstances}
           selectedInstanceId={null}
           onSelectInstance={() => {}}
-        />
-      )
+        />,
+      );
       // Should render the chart container (not the empty state)
-      expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument()
-    })
-  })
-})
+      expect(
+        container.querySelector(".recharts-responsive-container"),
+      ).toBeInTheDocument();
+    });
+  });
+});

@@ -1,16 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from "react";
 
 interface Props {
-  instancePort: string
-  tabId: string
-  label: string
-  url: string
-  quality?: number
-  maxWidth?: number
-  fps?: number
+  instancePort: string;
+  tabId: string;
+  label: string;
+  url: string;
+  quality?: number;
+  maxWidth?: number;
+  fps?: number;
 }
 
-type Status = 'connecting' | 'streaming' | 'error'
+type Status = "connecting" | "streaming" | "error";
 
 export default function ScreencastTile({
   instancePort,
@@ -21,75 +21,75 @@ export default function ScreencastTile({
   maxWidth = 800,
   fps = 1,
 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const socketRef = useRef<WebSocket | null>(null)
-  const [status, setStatus] = useState<Status>('connecting')
-  const [fpsDisplay, setFpsDisplay] = useState('—')
-  const [sizeDisplay, setSizeDisplay] = useState('—')
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  const [status, setStatus] = useState<Status>("connecting");
+  const [fpsDisplay, setFpsDisplay] = useState("—");
+  const [sizeDisplay, setSizeDisplay] = useState("—");
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
     // Connect directly to instance's screencast WebSocket
-    const wsUrl = `ws://localhost:${instancePort}/screencast?tabId=${encodeURIComponent(tabId)}&quality=${quality}&maxWidth=${maxWidth}&fps=${fps}`
+    const wsUrl = `ws://localhost:${instancePort}/screencast?tabId=${encodeURIComponent(tabId)}&quality=${quality}&maxWidth=${maxWidth}&fps=${fps}`;
 
-    const socket = new WebSocket(wsUrl)
-    socket.binaryType = 'arraybuffer'
-    socketRef.current = socket
+    const socket = new WebSocket(wsUrl);
+    socket.binaryType = "arraybuffer";
+    socketRef.current = socket;
 
-    let frameCount = 0
-    let lastFpsTime = Date.now()
+    let frameCount = 0;
+    let lastFpsTime = Date.now();
 
     socket.onopen = () => {
-      setStatus('streaming')
-    }
+      setStatus("streaming");
+    };
 
     socket.onmessage = (evt) => {
-      const blob = new Blob([evt.data], { type: 'image/jpeg' })
-      const imgUrl = URL.createObjectURL(blob)
-      const img = new Image()
+      const blob = new Blob([evt.data], { type: "image/jpeg" });
+      const imgUrl = URL.createObjectURL(blob);
+      const img = new Image();
       img.onload = () => {
-        canvas.width = img.width
-        canvas.height = img.height
-        ctx.drawImage(img, 0, 0)
-        URL.revokeObjectURL(imgUrl)
-      }
-      img.src = imgUrl
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(imgUrl);
+      };
+      img.src = imgUrl;
 
-      frameCount++
-      const now = Date.now()
+      frameCount++;
+      const now = Date.now();
       if (now - lastFpsTime >= 1000) {
-        setFpsDisplay(`${frameCount} fps`)
-        setSizeDisplay(`${(evt.data.byteLength / 1024).toFixed(0)} KB/frame`)
-        frameCount = 0
-        lastFpsTime = now
+        setFpsDisplay(`${frameCount} fps`);
+        setSizeDisplay(`${(evt.data.byteLength / 1024).toFixed(0)} KB/frame`);
+        frameCount = 0;
+        lastFpsTime = now;
       }
-    }
+    };
 
     socket.onerror = () => {
-      setStatus('error')
-    }
+      setStatus("error");
+    };
 
     socket.onclose = () => {
-      setStatus('error')
-    }
+      setStatus("error");
+    };
 
     return () => {
-      socket.close()
-      socketRef.current = null
-    }
-  }, [instancePort, tabId, quality, maxWidth, fps])
+      socket.close();
+      socketRef.current = null;
+    };
+  }, [instancePort, tabId, quality, maxWidth, fps]);
 
   const statusColor =
-    status === 'streaming'
-      ? 'bg-success'
-      : status === 'connecting'
-        ? 'bg-warning'
-        : 'bg-destructive'
+    status === "streaming"
+      ? "bg-success"
+      : status === "connecting"
+        ? "bg-warning"
+        : "bg-destructive";
 
   return (
     <div className="overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated">
@@ -110,7 +110,7 @@ export default function ScreencastTile({
           width={800}
           height={600}
         />
-        {status === 'error' && (
+        {status === "error" && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-sm text-text-muted">
             Connection lost
           </div>
@@ -123,5 +123,5 @@ export default function ScreencastTile({
         <span>{sizeDisplay}</span>
       </div>
     </div>
-  )
+  );
 }

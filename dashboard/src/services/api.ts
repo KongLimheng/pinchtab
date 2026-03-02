@@ -8,136 +8,140 @@ import type {
   CreateProfileRequest,
   CreateProfileResponse,
   LaunchInstanceRequest,
-} from '../generated/types'
+} from "../generated/types";
 
-const BASE = '' // Uses proxy in dev
+const BASE = ""; // Uses proxy in dev
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(BASE + url, options)
+  const res = await fetch(BASE + url, options);
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }))
-    throw new Error(err.error || 'Request failed')
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || "Request failed");
   }
-  return res.json()
+  return res.json();
 }
 
 // Profiles — endpoint is /profiles (no /api prefix)
 export async function fetchProfiles(): Promise<Profile[]> {
-  return request<Profile[]>('/profiles')
+  return request<Profile[]>("/profiles");
 }
 
-export async function createProfile(data: CreateProfileRequest): Promise<CreateProfileResponse> {
-  return request<CreateProfileResponse>('/profiles', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export async function createProfile(
+  data: CreateProfileRequest,
+): Promise<CreateProfileResponse> {
+  return request<CreateProfileResponse>("/profiles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
-  })
+  });
 }
 
 export async function deleteProfile(id: string): Promise<void> {
   await request<void>(`/profiles/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-  })
+    method: "DELETE",
+  });
 }
 
 // Instances — endpoint is /instances (no /api prefix)
 export async function fetchInstances(): Promise<Instance[]> {
-  return request<Instance[]>('/instances')
+  return request<Instance[]>("/instances");
 }
 
-export async function launchInstance(data: LaunchInstanceRequest): Promise<Instance> {
-  return request<Instance>('/instances/launch', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+export async function launchInstance(
+  data: LaunchInstanceRequest,
+): Promise<Instance> {
+  return request<Instance>("/instances/launch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
-  })
+  });
 }
 
 export async function stopInstance(id: string): Promise<void> {
   await request<void>(`/instances/${encodeURIComponent(id)}/stop`, {
-    method: 'POST',
-  })
+    method: "POST",
+  });
 }
 
 export async function fetchInstanceTabs(id: string): Promise<InstanceTab[]> {
-  return request<InstanceTab[]>(`/instances/${encodeURIComponent(id)}/tabs`)
+  return request<InstanceTab[]>(`/instances/${encodeURIComponent(id)}/tabs`);
 }
 
 export async function fetchAllTabs(): Promise<InstanceTab[]> {
-  return request<InstanceTab[]>('/instances/tabs')
+  return request<InstanceTab[]>("/instances/tabs");
 }
 
 // Agents — endpoint is /api/agents (dashboard API)
 export async function fetchAgents(): Promise<Agent[]> {
-  return request<Agent[]>('/api/agents')
+  return request<Agent[]>("/api/agents");
 }
 
 // Settings — TODO: check if endpoint exists
 export async function fetchSettings(): Promise<Settings> {
-  return request<Settings>('/api/settings')
+  return request<Settings>("/api/settings");
 }
 
 export async function updateSettings(settings: Settings): Promise<Settings> {
-  return request<Settings>('/api/settings', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+  return request<Settings>("/api/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(settings),
-  })
+  });
 }
 
 // Health
 export async function fetchHealth(): Promise<ServerInfo> {
-  return request<ServerInfo>('/health')
+  return request<ServerInfo>("/health");
 }
 
 // SSE Events — endpoint is /api/events
 export interface SystemEvent {
-  type: 'instance.started' | 'instance.stopped' | 'instance.error'
-  instance?: Instance
+  type: "instance.started" | "instance.stopped" | "instance.error";
+  instance?: Instance;
 }
 
 export interface AgentEvent {
-  agentId: string
-  action: string
-  url?: string
-  timestamp: string
+  agentId: string;
+  action: string;
+  url?: string;
+  timestamp: string;
 }
 
 export type EventHandler = {
-  onSystem?: (event: SystemEvent) => void
-  onAgent?: (event: AgentEvent) => void
-  onInit?: (agents: Agent[]) => void
-}
+  onSystem?: (event: SystemEvent) => void;
+  onAgent?: (event: AgentEvent) => void;
+  onInit?: (agents: Agent[]) => void;
+};
 
 export function subscribeToEvents(handlers: EventHandler): () => void {
-  const es = new EventSource('/api/events')
+  const es = new EventSource("/api/events");
 
-  es.addEventListener('init', (e) => {
+  es.addEventListener("init", (e) => {
     try {
-      const agents = JSON.parse(e.data) as Agent[]
-      handlers.onInit?.(agents)
+      const agents = JSON.parse(e.data) as Agent[];
+      handlers.onInit?.(agents);
     } catch {
       // ignore
     }
-  })
+  });
 
-  es.addEventListener('system', (e) => {
+  es.addEventListener("system", (e) => {
     try {
-      const event = JSON.parse(e.data) as SystemEvent
-      handlers.onSystem?.(event)
+      const event = JSON.parse(e.data) as SystemEvent;
+      handlers.onSystem?.(event);
     } catch {
       // ignore
     }
-  })
+  });
 
-  es.addEventListener('action', (e) => {
+  es.addEventListener("action", (e) => {
     try {
-      const event = JSON.parse(e.data) as AgentEvent
-      handlers.onAgent?.(event)
+      const event = JSON.parse(e.data) as AgentEvent;
+      handlers.onAgent?.(event);
     } catch {
       // ignore
     }
-  })
+  });
 
-  return () => es.close()
+  return () => es.close();
 }

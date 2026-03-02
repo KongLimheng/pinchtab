@@ -1,12 +1,17 @@
-import { useEffect } from 'react'
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAppStore } from './stores/useAppStore'
-import { NavBar } from './components/molecules'
-import { MonitoringPage, ProfilesPage, AgentsPage, SettingsPage } from './pages'
-import * as api from './services/api'
+import { useEffect } from "react";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAppStore } from "./stores/useAppStore";
+import { NavBar } from "./components/molecules";
+import {
+  MonitoringPage,
+  ProfilesPage,
+  AgentsPage,
+  SettingsPage,
+} from "./pages";
+import * as api from "./services/api";
 
 function AppContent() {
-  const { setInstances, setProfiles, setAgents } = useAppStore()
+  const { setInstances, setProfiles, setAgents } = useAppStore();
 
   // Initial load
   useEffect(() => {
@@ -15,42 +20,42 @@ function AppContent() {
         const [instances, profiles] = await Promise.all([
           api.fetchInstances(),
           api.fetchProfiles(),
-        ])
-        setInstances(instances)
-        setProfiles(profiles)
+        ]);
+        setInstances(instances);
+        setProfiles(profiles);
       } catch (e) {
-        console.error('Failed to load initial data', e)
+        console.error("Failed to load initial data", e);
       }
-    }
-    load()
-  }, [setInstances, setProfiles])
+    };
+    load();
+  }, [setInstances, setProfiles]);
 
   // Subscribe to SSE events
   useEffect(() => {
     const unsubscribe = api.subscribeToEvents({
       onInit: (agents) => {
-        setAgents(agents)
+        setAgents(agents);
       },
       onSystem: async (event) => {
-        console.log('System event:', event)
-        if (event.type.startsWith('instance.')) {
+        console.log("System event:", event);
+        if (event.type.startsWith("instance.")) {
           try {
-            const instances = await api.fetchInstances()
-            setInstances(instances)
-            const profiles = await api.fetchProfiles()
-            setProfiles(profiles)
+            const instances = await api.fetchInstances();
+            setInstances(instances);
+            const profiles = await api.fetchProfiles();
+            setProfiles(profiles);
           } catch (e) {
-            console.error('Failed to refresh after event', e)
+            console.error("Failed to refresh after event", e);
           }
         }
       },
       onAgent: (event) => {
-        console.log('Agent event:', event)
+        console.log("Agent event:", event);
       },
-    })
+    });
 
-    return unsubscribe
-  }, [setInstances, setProfiles, setAgents])
+    return unsubscribe;
+  }, [setInstances, setProfiles, setAgents]);
 
   return (
     <div className="flex h-screen flex-col bg-bg-app">
@@ -65,7 +70,7 @@ function AppContent() {
         </Routes>
       </main>
     </div>
-  )
+  );
 }
 
 export default function App() {
@@ -73,5 +78,5 @@ export default function App() {
     <HashRouter>
       <AppContent />
     </HashRouter>
-  )
+  );
 }

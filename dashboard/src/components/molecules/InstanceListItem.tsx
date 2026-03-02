@@ -1,11 +1,11 @@
-import { Badge } from '../atoms'
-import type { Instance } from '../../generated/types'
+import { Badge } from "../atoms";
+import type { Instance } from "../../generated/types";
 
 interface Props {
-  instance: Instance
-  tabCount: number
-  selected: boolean
-  onClick: () => void
+  instance: Instance;
+  tabCount: number;
+  selected: boolean;
+  onClick: () => void;
 }
 
 export default function InstanceListItem({
@@ -15,26 +15,26 @@ export default function InstanceListItem({
   onClick,
 }: Props) {
   const statusColor =
-    instance.status === 'running'
-      ? 'bg-success'
-      : instance.status === 'error'
-        ? 'bg-destructive'
-        : 'bg-text-muted'
+    instance.status === "running"
+      ? "bg-success"
+      : instance.status === "error"
+        ? "bg-destructive"
+        : "bg-text-muted";
 
   const badgeVariant =
-    instance.status === 'running'
-      ? 'success'
-      : instance.status === 'error'
-        ? 'danger'
-        : 'default'
+    instance.status === "running"
+      ? "success"
+      : instance.status === "error"
+        ? "danger"
+        : "default";
 
   return (
     <button
       onClick={onClick}
       className={`mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left transition-all ${
         selected
-          ? 'bg-primary/10 border border-primary'
-          : 'border border-transparent hover:bg-bg-elevated'
+          ? "bg-primary/10 border border-primary"
+          : "border border-transparent hover:bg-bg-elevated"
       }`}
     >
       <div className={`h-2 w-2 rounded-full ${statusColor}`} />
@@ -48,5 +48,5 @@ export default function InstanceListItem({
       </div>
       <Badge variant={badgeVariant}>{instance.status}</Badge>
     </button>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { useAppStore } from '../stores/useAppStore'
-import { EmptyState, Button } from '../components/atoms'
-import { TabsChart, InstanceListItem, TabItem } from '../components/molecules'
-import type { InstanceTab } from '../generated/types'
-import * as api from '../services/api'
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useAppStore } from "../stores/useAppStore";
+import { EmptyState, Button } from "../components/atoms";
+import { TabsChart, InstanceListItem, TabItem } from "../components/molecules";
+import type { InstanceTab } from "../generated/types";
+import * as api from "../services/api";
 
-const POLL_INTERVAL = 30000 // 30 seconds
+const POLL_INTERVAL = 30000; // 30 seconds
 
 export default function MonitoringPage() {
   const {
@@ -16,92 +16,92 @@ export default function MonitoringPage() {
     currentTabs,
     addChartDataPoint,
     setCurrentTabs,
-  } = useAppStore()
-  const [selectedId, setSelectedId] = useState<string | null>(null)
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  } = useAppStore();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadInstances = async () => {
-    setInstancesLoading(true)
+    setInstancesLoading(true);
     try {
-      const data = await api.fetchInstances()
-      setInstances(data)
+      const data = await api.fetchInstances();
+      setInstances(data);
     } catch (e) {
-      console.error('Failed to load instances', e)
+      console.error("Failed to load instances", e);
     } finally {
-      setInstancesLoading(false)
+      setInstancesLoading(false);
     }
-  }
+  };
 
   // Fetch tabs for all running instances
   const fetchAllInstanceTabs = useCallback(async () => {
-    const runningInstances = instances.filter((i) => i.status === 'running')
-    if (runningInstances.length === 0) return
+    const runningInstances = instances.filter((i) => i.status === "running");
+    if (runningInstances.length === 0) return;
 
     try {
       // Use aggregated endpoint that returns proper format
-      const allTabs = await api.fetchAllTabs()
-      const tabsArray = Array.isArray(allTabs) ? allTabs : []
+      const allTabs = await api.fetchAllTabs();
+      const tabsArray = Array.isArray(allTabs) ? allTabs : [];
 
-      const timestamp = Date.now()
-      const dataPoint: Record<string, number> = { timestamp }
-      const tabsByInstance: Record<string, InstanceTab[]> = {}
+      const timestamp = Date.now();
+      const dataPoint: Record<string, number> = { timestamp };
+      const tabsByInstance: Record<string, InstanceTab[]> = {};
 
       // Group tabs by instance
       for (const inst of runningInstances) {
-        const instTabs = tabsArray.filter((t) => t.instanceId === inst.id)
-        dataPoint[inst.id] = instTabs.length
-        tabsByInstance[inst.id] = instTabs
+        const instTabs = tabsArray.filter((t) => t.instanceId === inst.id);
+        dataPoint[inst.id] = instTabs.length;
+        tabsByInstance[inst.id] = instTabs;
       }
 
-      addChartDataPoint(dataPoint as any)
-      setCurrentTabs(tabsByInstance)
+      addChartDataPoint(dataPoint as any);
+      setCurrentTabs(tabsByInstance);
     } catch (e) {
-      console.error('Failed to fetch tabs:', e)
+      console.error("Failed to fetch tabs:", e);
     }
-  }, [instances, addChartDataPoint, setCurrentTabs])
+  }, [instances, addChartDataPoint, setCurrentTabs]);
 
   // Initial load
   useEffect(() => {
     if (instances.length === 0) {
-      loadInstances()
+      loadInstances();
     }
-  }, [])
+  }, []);
 
   // Poll tabs
   useEffect(() => {
-    fetchAllInstanceTabs()
-    pollRef.current = setInterval(fetchAllInstanceTabs, POLL_INTERVAL)
+    fetchAllInstanceTabs();
+    pollRef.current = setInterval(fetchAllInstanceTabs, POLL_INTERVAL);
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
-    }
-  }, [fetchAllInstanceTabs])
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [fetchAllInstanceTabs]);
 
   // Auto-select first running instance
   useEffect(() => {
     if (!selectedId) {
-      const firstRunning = instances.find((i) => i.status === 'running')
-      if (firstRunning) setSelectedId(firstRunning.id)
+      const firstRunning = instances.find((i) => i.status === "running");
+      if (firstRunning) setSelectedId(firstRunning.id);
     }
-  }, [instances, selectedId])
+  }, [instances, selectedId]);
 
   const handleStop = async (id: string) => {
     try {
-      await api.stopInstance(id)
+      await api.stopInstance(id);
     } catch (e) {
-      console.error('Failed to stop instance', e)
+      console.error("Failed to stop instance", e);
     }
-  }
+  };
 
-  const selectedInstance = instances.find((i) => i.id === selectedId)
-  const selectedTabs = selectedId ? currentTabs[selectedId] || [] : []
-  const runningInstances = instances.filter((i) => i.status === 'running')
+  const selectedInstance = instances.find((i) => i.id === selectedId);
+  const selectedTabs = selectedId ? currentTabs[selectedId] || [] : [];
+  const runningInstances = instances.filter((i) => i.status === "running");
 
   if (instances.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center p-4">
         <EmptyState title="Waiting for instances..." icon="📡" />
       </div>
-    )
+    );
   }
 
   return (
@@ -149,11 +149,11 @@ export default function MonitoringPage() {
                     {selectedInstance.profileName}
                   </h3>
                   <div className="text-xs text-text-muted">
-                    Port {selectedInstance.port} ·{' '}
-                    {selectedInstance.headless ? 'Headless' : 'Headed'}
+                    Port {selectedInstance.port} ·{" "}
+                    {selectedInstance.headless ? "Headless" : "Headed"}
                   </div>
                 </div>
-                {selectedInstance.status === 'running' && (
+                {selectedInstance.status === "running" && (
                   <Button
                     size="sm"
                     variant="danger"
@@ -190,5 +190,5 @@ export default function MonitoringPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -10,4 +10,4 @@ export type {
   ServerInfo,
   CreateProfileRequest,
   LaunchInstanceRequest,
-} from '../generated/types'
+} from "../generated/types";

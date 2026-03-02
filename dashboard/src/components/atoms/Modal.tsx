@@ -1,31 +1,38 @@
-import { useEffect } from 'react'
-import Button from './Button'
+import { useEffect } from "react";
+import Button from "./Button";
 
 interface Props {
-  open: boolean
-  onClose: () => void
-  title: string
-  children: React.ReactNode
-  actions?: React.ReactNode
-  wide?: boolean
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+  actions?: React.ReactNode;
+  wide?: boolean;
 }
 
-export default function Modal({ open, onClose, title, children, actions, wide }: Props) {
+export default function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  actions,
+  wide,
+}: Props) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+      if (e.key === "Escape") onClose();
+    };
     if (open) {
-      document.addEventListener('keydown', handleEsc)
-      document.body.style.overflow = 'hidden'
+      document.addEventListener("keydown", handleEsc);
+      document.body.style.overflow = "hidden";
     }
     return () => {
-      document.removeEventListener('keydown', handleEsc)
-      document.body.style.overflow = ''
-    }
-  }, [open, onClose])
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "";
+    };
+  }, [open, onClose]);
 
-  if (!open) return null
+  if (!open) return null;
 
   return (
     <div
@@ -34,11 +41,13 @@ export default function Modal({ open, onClose, title, children, actions, wide }:
     >
       <div
         className={`max-h-[90vh] overflow-y-auto rounded-lg border border-border-subtle bg-bg-surface p-5 shadow-xl ${
-          wide ? 'w-full max-w-lg' : 'w-full max-w-sm'
+          wide ? "w-full max-w-lg" : "w-full max-w-sm"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-4 text-lg font-semibold text-text-primary">{title}</h3>
+        <h3 className="mb-4 text-lg font-semibold text-text-primary">
+          {title}
+        </h3>
         <div className="text-sm text-text-secondary">{children}</div>
         <div className="mt-5 flex justify-end gap-2">
           {actions ?? (
@@ -49,5 +58,5 @@ export default function Modal({ open, onClose, title, children, actions, wide }:
         </div>
       </div>
     </div>
-  )
+  );
 }
