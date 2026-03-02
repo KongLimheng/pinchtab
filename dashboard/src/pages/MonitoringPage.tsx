@@ -71,8 +71,15 @@ export default function MonitoringPage() {
         });
       }
 
-      // Skip instance data if no running instances
-      if (runningInstances.length === 0) return;
+      // Skip instance data if no stable running instances
+      // (this prevents calling /instances/tabs which proxies to ALL instances,
+      // including fresh ones that might not be ready yet)
+      if (runningInstances.length === 0) {
+        // Clear stale data when no stable instances
+        setCurrentTabs({});
+        setCurrentMemory({});
+        return;
+      }
 
       // Fetch tabs and instance metrics
       const [allTabs, allMetrics] = await Promise.all([
