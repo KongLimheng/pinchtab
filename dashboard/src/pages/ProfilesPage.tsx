@@ -70,15 +70,22 @@ export default function ProfilesPage() {
     if (!showLaunch) return;
     setLaunchError("");
     try {
-      await api.launchInstance({
+      const payload = {
         name: showLaunch,
-        port: launchPort || "9868",
+        port: launchPort || undefined,
         mode: launchHeadless ? "" : "headed",
-      });
+      };
+      console.log("Launching instance:", payload);
+      const result = await api.launchInstance(payload);
+      console.log("Launch result:", result);
       setShowLaunch(null);
       setLaunchPort("9868");
       setLaunchHeadless(false);
+      // Refresh instances list
+      const updated = await api.fetchInstances();
+      setInstances(updated);
     } catch (e) {
+      console.error("Launch failed:", e);
       const msg = e instanceof Error ? e.message : "Failed to launch instance";
       setLaunchError(msg);
     }

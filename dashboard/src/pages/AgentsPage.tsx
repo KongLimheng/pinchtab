@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useAppStore } from "../stores/useAppStore";
 import { EmptyState } from "../components/atoms";
-import { ActivityLine } from "../components/molecules";
+import { AgentItem, ActivityLine } from "../components/molecules";
 import * as api from "../services/api";
 
 const filters = [
@@ -48,9 +48,9 @@ export default function AgentsPage() {
   });
 
   return (
-    <div className="flex flex-1 flex-col">
-      {/* Agents carousel */}
-      <div className="shrink-0 border-b border-border-subtle bg-bg-surface">
+    <div className="flex flex-1 flex-col sm:flex-row">
+      {/* Mobile: Agents carousel (horizontal scroll) */}
+      <div className="shrink-0 border-b border-border-subtle bg-bg-surface sm:hidden">
         <div className="flex items-center gap-2 overflow-x-auto px-4 py-3">
           <button
             className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all ${
@@ -62,29 +62,58 @@ export default function AgentsPage() {
           >
             All
           </button>
+          {agents.map((agent) => (
+            <button
+              key={agent.id}
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+                selectedAgentId === agent.id
+                  ? "bg-primary text-white"
+                  : "bg-bg-elevated text-text-secondary hover:bg-bg-elevated/80"
+              }`}
+              onClick={() => setSelectedAgentId(agent.id)}
+            >
+              {agent.name || agent.id}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: Agents sidebar */}
+      <div className="hidden w-64 shrink-0 border-r border-border-subtle bg-bg-surface sm:block">
+        <div className="border-b border-border-subtle p-3">
+          <h2 className="text-sm font-semibold text-text-secondary">Agents</h2>
+        </div>
+        <div className="p-2">
           {agents.length === 0 ? (
-            <span className="shrink-0 text-sm text-text-muted">
-              🦀 No agents yet — make an API call with{" "}
-              <code className="text-primary">X-Agent-Id</code>
-            </span>
+            <div className="py-8 text-center text-sm text-text-muted">
+              <div className="mb-2 text-2xl">🦀</div>
+              No agents connected yet
+              <div className="mt-1 text-xs">
+                Make an API call with{" "}
+                <code className="text-primary">X-Agent-Id</code> header
+              </div>
+            </div>
           ) : (
-            agents.map((agent) => (
+            <div className="flex flex-col gap-1">
               <button
-                key={agent.id}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                  selectedAgentId === agent.id
-                    ? "bg-primary text-white"
-                    : "bg-bg-elevated text-text-secondary hover:bg-bg-elevated/80"
+                className={`rounded-lg px-3 py-2 text-left text-sm transition-all ${
+                  !selectedAgentId
+                    ? "bg-primary/10 text-primary"
+                    : "text-text-muted hover:bg-bg-elevated"
                 }`}
-                onClick={() => setSelectedAgentId(agent.id)}
-                title={`${agent.requestCount} requests`}
+                onClick={() => setSelectedAgentId(null)}
               >
-                {agent.name || agent.id}
-                <span className="ml-1.5 text-xs opacity-70">
-                  ({agent.requestCount})
-                </span>
+                All Agents
               </button>
-            ))
+              {agents.map((agent) => (
+                <AgentItem
+                  key={agent.id}
+                  agent={agent}
+                  selected={selectedAgentId === agent.id}
+                  onClick={() => setSelectedAgentId(agent.id)}
+                />
+              ))}
+            </div>
           )}
         </div>
       </div>
