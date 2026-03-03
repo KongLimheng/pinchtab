@@ -72,9 +72,53 @@ func envBoolOr(key string, fallback bool) bool {
 	}
 }
 
+// homeDir returns the user's home directory, checking $HOME first for container compatibility
 func homeDir() string {
+	if home := os.Getenv("HOME"); home != "" {
+		return home
+	}
 	h, _ := os.UserHomeDir()
 	return h
+}
+
+// userConfigDir returns the OS-appropriate app config directory:
+// - macOS: ~/Library/Application Support/pinchtab
+// - Linux: ~/.config/pinchtab (or $XDG_CONFIG_HOME/pinchtab)
+// - Windows: %APPDATA%\pinchtab
+//
+// For backwards compatibility, if ~/.pinchtab exists and the new location
+// doesn't, it returns ~/.pinchtab (allowing seamless migration).
+func userConfigDir() string {
+	home := homeDir()
+	legacyPath := filepath.Join(home, ".pinchtab")
+
+	// Try to get OS-appropriate config directory
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		// Fallback to legacy location if UserConfigDir fails
+		return legacyPath
+	}
+
+	newPath := filepath.Join(configDir, "pinchtab")
+
+	// Backwards compatibility: if legacy location exists and new doesn't, use legacy
+	legacyExists := dirExists(legacyPath)
+	newExists := dirExists(newPath)
+
+	if legacyExists && !newExists {
+		return legacyPath
+	}
+
+	return newPath
+}
+
+// dirExists checks if a directory exists
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
 
 func (c *RuntimeConfig) ListenAddr() string {
@@ -104,10 +148,10 @@ func Load() *RuntimeConfig {
 		InstancePortEnd:   envIntOr("INSTANCE_PORT_END", 9968),
 		CdpURL:            os.Getenv("CDP_URL"),
 		Token:             os.Getenv("BRIDGE_TOKEN"),
-		StateDir:          envOr("BRIDGE_STATE_DIR", filepath.Join(homeDir(), ".pinchtab")),
+		StateDir:          envOr("BRIDGE_STATE_DIR", userConfigDir()),
 		Headless:          envBoolOr("BRIDGE_HEADLESS", true),
 		NoRestore:         os.Getenv("BRIDGE_NO_RESTORE") == "true",
-		ProfileDir:        envOr("BRIDGE_PROFILE", filepath.Join(homeDir(), ".pinchtab", "chrome-profile")),
+		ProfileDir:        envOr("BRIDGE_PROFILE", filepath.Join(userConfigDir(), "chrome-profile")),
 		ChromeVersion:     envOr("BRIDGE_CHROME_VERSION", "144.0.7559.133"),
 		Timezone:          os.Getenv("BRIDGE_TIMEZONE"),
 		BlockImages:       os.Getenv("BRIDGE_BLOCK_IMAGES") == "true",
@@ -125,7 +169,7 @@ func Load() *RuntimeConfig {
 		WaitNavDelay:      1 * time.Second,
 	}
 
-	configPath := envOr("BRIDGE_CONFIG", filepath.Join(homeDir(), ".pinchtab", "config.json"))
+	configPath := envOr("BRIDGE_CONFIG", filepath.Join(userConfigDir(), "config.json"))
 
 	data, err := os.ReadFile(configPath)
 	if err != nil {
@@ -185,8 +229,8 @@ func DefaultFileConfig() FileConfig {
 		Port:              "9867",
 		InstancePortStart: &start,
 		InstancePortEnd:   &end,
-		StateDir:          filepath.Join(homeDir(), ".pinchtab"),
-		ProfileDir:        filepath.Join(homeDir(), ".pinchtab", "chrome-profile"),
+		StateDir:          userConfigDir(),
+		ProfileDir:        filepath.Join(userConfigDir(), "chrome-profile"),
 		Headless:          &h,
 		NoRestore:         false,
 		TimeoutSec:        15,
