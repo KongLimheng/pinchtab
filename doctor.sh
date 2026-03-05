@@ -3,15 +3,13 @@ set -euo pipefail
 
 # doctor.sh — Verify and setup development environment for pinchtab
 # Interactive: asks before installing anything
-# Style: matches install.sh conventions
 
 BOLD='\033[1m'
-DIM='\033[2m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
+ACCENT='\033[38;2;251;191;36m'      # yellow #fbbf24
+INFO='\033[38;2;136;146;176m'       # muted #8892b0
+SUCCESS='\033[38;2;0;229;204m'      # cyan #00e5cc
+ERROR='\033[38;2;230;57;70m'        # red #e63946
+MUTED='\033[38;2;90;100;128m'       # text-muted #5a6480
 NC='\033[0m'
 
 CRITICAL=0
@@ -19,27 +17,24 @@ WARNINGS=0
 
 # ── Helpers ──────────────────────────────────────────────────────────
 
-ok()   { echo -e "  ${GREEN}✅${NC} $1"; }
-fail() { echo -e "  ${RED}❌${NC} $1"; [ -n "${2:-}" ] && echo -e "     ${DIM}$2${NC}"; CRITICAL=$((CRITICAL + 1)); }
-warn() { echo -e "  ${YELLOW}⚠️${NC}  $1"; [ -n "${2:-}" ] && echo -e "     ${DIM}$2${NC}"; WARNINGS=$((WARNINGS + 1)); }
-info() { echo -e "     ${CYAN}→${NC} $1"; }
+ok()      { echo -e "  ${SUCCESS}✓${NC} $1"; }
+fail()    { echo -e "  ${ERROR}✗${NC} $1"; [ -n "${2:-}" ] && echo -e "    ${MUTED}$2${NC}"; CRITICAL=$((CRITICAL + 1)); }
+warn()    { echo -e "  ${ACCENT}·${NC} $1"; [ -n "${2:-}" ] && echo -e "    ${MUTED}$2${NC}"; WARNINGS=$((WARNINGS + 1)); }
+hint()    { echo -e "    ${MUTED}$1${NC}"; }
 
 confirm() {
-  local prompt="$1"
-  echo -ne "     ${BOLD}$prompt [y/N]${NC} "
+  echo -ne "    ${BOLD}$1 [y/N]${NC} "
   read -r answer
   [[ "$answer" =~ ^[Yy]$ ]]
 }
 
 section() {
   echo ""
-  echo -e "${BLUE}━━━ $1 ━━━${NC}"
-  echo ""
+  echo -e "${ACCENT}${BOLD}$1${NC}"
 }
 
-# ── Detect OS & package manager ──────────────────────────────────────
+# ── Detect package manager ───────────────────────────────────────────
 
-OS="$(uname -s)"
 HAS_BREW=false
 HAS_APT=false
 command -v brew &>/dev/null && HAS_BREW=true
@@ -48,9 +43,10 @@ command -v apt-get &>/dev/null && HAS_APT=true
 # ── Start ────────────────────────────────────────────────────────────
 
 echo ""
-echo -e "${BOLD}Verifying and setting up development environment...${NC}"
+echo -e "  ${ACCENT}${BOLD}🦀 Pinchtab Doctor${NC}"
+echo -e "  ${INFO}Verifying and setting up development environment...${NC}"
 
-section "Go Backend Requirements"
+section "Go Backend"
 
 # ── Go ───────────────────────────────────────────────────────────────
 
@@ -62,21 +58,19 @@ if command -v go &>/dev/null; then
   if [ "$GO_MAJOR" -ge 1 ] && [ "$GO_MINOR" -ge 25 ]; then
     ok "Go $GO_VERSION"
   else
-    fail "Go $GO_VERSION" "Go 1.25+ required."
+    fail "Go $GO_VERSION — requires 1.25+"
     if $HAS_BREW && confirm "Install latest Go via brew?"; then
-      brew install go
-      ok "Go installed"
+      brew install go && ok "Go installed" && CRITICAL=$((CRITICAL - 1))
     else
-      info "Install from https://go.dev/dl/"
+      hint "Install from https://go.dev/dl/"
     fi
   fi
 else
   fail "Go not found"
   if $HAS_BREW && confirm "Install Go via brew?"; then
-    brew install go
-    ok "Go installed"
+    brew install go && ok "Go installed" && CRITICAL=$((CRITICAL - 1))
   else
-    info "Install from https://go.dev/dl/"
+    hint "Install from https://go.dev/dl/"
   fi
 fi
 
@@ -88,29 +82,31 @@ if command -v golangci-lint &>/dev/null; then
 else
   fail "golangci-lint" "Required for pre-commit hooks and CI."
   if $HAS_BREW && confirm "Install golangci-lint via brew?"; then
-    brew install golangci-lint
-    ok "golangci-lint installed"
+    brew install golangci-lint && ok "golangci-lint installed" && CRITICAL=$((CRITICAL - 1))
   elif command -v go &>/dev/null && confirm "Install golangci-lint via go install?"; then
-    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-    ok "golangci-lint installed"
+    go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest && ok "golangci-lint installed" && CRITICAL=$((CRITICAL - 1))
   else
-    info "Install: brew install golangci-lint"
-    info "    or:  go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
+    hint "brew install golangci-lint"
+    hint "go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"
   fi
 fi
 
 # ── Git hooks ────────────────────────────────────────────────────────
 
 if [ -f ".git/hooks/pre-commit" ]; then
-  ok "Git hooks installed"
+  ok "Git hooks"
 else
   warn "Git hooks not installed"
   if confirm "Install git hooks now?"; then
-    ./scripts/install-hooks.sh 2>/dev/null || {
+    if ./scripts/install-hooks.sh 2>/dev/null; then
+      ok "Git hooks installed"
+      WARNINGS=$((WARNINGS - 1))
+    else
       cp scripts/pre-commit .git/hooks/pre-commit
       chmod +x .git/hooks/pre-commit
-    }
-    ok "Git hooks installed"
+      ok "Git hooks installed"
+      WARNINGS=$((WARNINGS - 1))
+    fi
   fi
 fi
 
@@ -121,14 +117,13 @@ if [ -f "go.mod" ]; then
     ok "Go dependencies"
   else
     warn "Go dependencies not downloaded"
-    if confirm "Download Go dependencies now?"; then
-      go mod download
-      ok "Go dependencies downloaded"
+    if confirm "Download Go dependencies?"; then
+      go mod download && ok "Go dependencies downloaded" && WARNINGS=$((WARNINGS - 1))
     fi
   fi
 fi
 
-section "Dashboard Requirements (React/TypeScript)"
+section "Dashboard (React/TypeScript)"
 
 if [ -d "dashboard" ]; then
 
@@ -141,30 +136,32 @@ if [ -d "dashboard" ]; then
     if [ "$NODE_MAJOR" -ge 18 ]; then
       ok "Node.js $NODE_VERSION"
     else
-      warn "Node.js $NODE_VERSION" "Node 18+ recommended."
+      warn "Node.js $NODE_VERSION — 18+ recommended"
+      if $HAS_BREW && confirm "Install latest Node.js via brew?"; then
+        brew install node && ok "Node.js installed" && WARNINGS=$((WARNINGS - 1))
+      else
+        hint "Install from https://nodejs.org"
+      fi
     fi
   else
-    warn "Node.js not found" "Optional — needed for dashboard development."
+    warn "Node.js not found" "Optional — needed for dashboard."
     if $HAS_BREW && confirm "Install Node.js via brew?"; then
-      brew install node
-      ok "Node.js installed"
+      brew install node && ok "Node.js installed" && WARNINGS=$((WARNINGS - 1))
     else
-      info "Install from https://nodejs.org"
+      hint "Install from https://nodejs.org"
     fi
   fi
 
   # ── Bun ────────────────────────────────────────────────────────
 
   if command -v bun &>/dev/null; then
-    BUN_VERSION=$(bun -v)
-    ok "Bun $BUN_VERSION"
+    ok "Bun $(bun -v)"
   else
     warn "Bun not found" "Optional — used for fast dashboard builds."
     if confirm "Install Bun?"; then
-      curl -fsSL https://bun.sh/install | bash
-      ok "Bun installed (restart shell to use)"
+      curl -fsSL https://bun.sh/install | bash && ok "Bun installed (restart shell to use)" && WARNINGS=$((WARNINGS - 1))
     else
-      info "Install: curl -fsSL https://bun.sh/install | bash"
+      hint "curl -fsSL https://bun.sh/install | bash"
     fi
   fi
 
@@ -176,40 +173,41 @@ if [ -d "dashboard" ]; then
     warn "Dashboard dependencies not installed"
     if command -v bun &>/dev/null; then
       if confirm "Install dashboard dependencies via bun?"; then
-        (cd dashboard && bun install)
-        ok "Dashboard dependencies installed"
+        (cd dashboard && bun install) && ok "Dashboard dependencies installed" && WARNINGS=$((WARNINGS - 1))
       fi
     elif command -v npm &>/dev/null; then
       if confirm "Install dashboard dependencies via npm?"; then
-        (cd dashboard && npm install)
-        ok "Dashboard dependencies installed"
+        (cd dashboard && npm install) && ok "Dashboard dependencies installed" && WARNINGS=$((WARNINGS - 1))
       fi
     else
-      info "Run: cd dashboard && bun install"
+      hint "cd dashboard && bun install"
     fi
   fi
 
 else
-  echo -e "  ${DIM}Dashboard not found (optional)${NC}"
+  echo -e "  ${MUTED}Dashboard directory not found (optional)${NC}"
 fi
 
+# ── Summary ──────────────────────────────────────────────────────────
+
 section "Summary"
+echo ""
 
 if [ $CRITICAL -eq 0 ] && [ $WARNINGS -eq 0 ]; then
-  echo -e "  ${GREEN}${BOLD}All checks passed!${NC} You're ready to develop."
+  echo -e "  ${SUCCESS}${BOLD}All checks passed!${NC} You're ready to develop."
   echo ""
-  echo -e "  ${DIM}Next steps:${NC}"
-  echo -e "    go build ./cmd/pinchtab     ${DIM}# Build${NC}"
-  echo -e "    go test ./...               ${DIM}# Test${NC}"
+  echo -e "  ${MUTED}Next steps:${NC}"
+  echo -e "    ${MUTED}go build ./cmd/pinchtab${NC}"
+  echo -e "    ${MUTED}go test ./...${NC}"
   exit 0
 fi
 
-[ $CRITICAL -gt 0 ] && echo -e "  ${RED}❌ $CRITICAL critical issue(s) remaining${NC}"
-[ $WARNINGS -gt 0 ] && echo -e "  ${YELLOW}⚠️  $WARNINGS warning(s)${NC}"
+[ $CRITICAL -gt 0 ] && echo -e "  ${ERROR}✗${NC} $CRITICAL critical issue(s) remaining"
+[ $WARNINGS -gt 0 ] && echo -e "  ${ACCENT}·${NC} $WARNINGS warning(s)"
 
 if [ $CRITICAL -gt 0 ]; then
   echo ""
-  echo -e "  ${DIM}After installing, run ./doctor.sh again.${NC}"
+  echo -e "  ${MUTED}After installing, run ./doctor.sh again.${NC}"
   exit 1
 fi
 
