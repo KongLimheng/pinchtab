@@ -7,16 +7,26 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/chromedp/chromedp"
 	"github.com/pinchtab/pinchtab/internal/web"
 )
 
+func (h *Handlers) evaluateEnabled() bool {
+	return h != nil && h.Config != nil && h.Config.AllowEvaluate
+}
+
 // HandleEvaluate runs JavaScript in the current tab.
 //
 // @Endpoint POST /evaluate
 func (h *Handlers) HandleEvaluate(w http.ResponseWriter, r *http.Request) {
+	if !h.evaluateEnabled() {
+		web.ErrorCode(w, 403, "evaluate_disabled", "evaluate endpoint is disabled; set PINCHTAB_ALLOW_EVALUATE=1 to enable", false, nil)
+		return
+	}
+
 	var req struct {
 		TabID      string `json:"tabId"`
 		Expression string `json:"expression"`
@@ -40,6 +50,12 @@ func (h *Handlers) HandleEvaluate(w http.ResponseWriter, r *http.Request) {
 	defer tCancel()
 	go web.CancelOnClientDone(r.Context(), tCancel)
 
+	slog.Warn("evaluate",
+		"tabId", req.TabID,
+		"expressionLength", len(req.Expression),
+		"remoteAddr", r.RemoteAddr,
+	)
+
 	var result any
 	if err := chromedp.Run(tCtx, chromedp.Evaluate(req.Expression, &result)); err != nil {
 		web.Error(w, 500, fmt.Errorf("evaluate: %w", err))
@@ -53,6 +69,11 @@ func (h *Handlers) HandleEvaluate(w http.ResponseWriter, r *http.Request) {
 //
 // @Endpoint POST /tabs/{id}/evaluate
 func (h *Handlers) HandleTabEvaluate(w http.ResponseWriter, r *http.Request) {
+	if !h.evaluateEnabled() {
+		web.ErrorCode(w, 403, "evaluate_disabled", "evaluate endpoint is disabled; set PINCHTAB_ALLOW_EVALUATE=1 to enable", false, nil)
+		return
+	}
+
 	tabID := r.PathValue("id")
 	if tabID == "" {
 		web.Error(w, 400, fmt.Errorf("tab id required"))
