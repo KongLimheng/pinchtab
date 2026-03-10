@@ -314,7 +314,7 @@ func (o *Orchestrator) Launch(name, port string, headless bool, extensionPaths [
 	}
 	env := mergeEnvWithOverrides(filterEnvWithPrefixes(os.Environ(), "BRIDGE_", "PINCHTAB_"), envOverrides)
 
-	logBuf := newRingBuffer(64 * 1024)
+	logBuf := newRingBuffer(256 * 1024)
 	slog.Info("starting instance process", "id", instanceID, "profile", name, "port", port)
 
 	cmd, err := o.runner.Run(context.Background(), o.binary, []string{"bridge"}, env, logBuf, logBuf)
