@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/chromedp"
 	"github.com/pinchtab/pinchtab/internal/human"
 )
@@ -193,9 +192,13 @@ func (b *Bridge) InitActionRegistry() {
 					return nil, err
 				}
 			} else if req.NodeID > 0 {
+				// req.NodeID is a BackendNodeID from the accessibility tree (same as humanClick).
+				// Must use DOM.focus with backendNodeId, not dom.Focus().WithNodeID() which
+				// expects a DOM NodeID — a different ID space. Using the wrong type causes
+				// "Could not find node with given id (-32000)". See issue #226.
 				if err := chromedp.Run(ctx,
 					chromedp.ActionFunc(func(ctx context.Context) error {
-						return dom.Focus().WithNodeID(cdp.NodeID(req.NodeID)).Do(ctx)
+						return chromedp.FromContext(ctx).Target.Execute(ctx, "DOM.focus", map[string]any{"backendNodeId": req.NodeID}, nil)
 					}),
 				); err != nil {
 					return nil, err
