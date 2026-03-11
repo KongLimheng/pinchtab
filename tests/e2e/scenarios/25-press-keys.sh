@@ -35,15 +35,7 @@ else
 fi
 
 # Check that username field does NOT contain "Enter" as text
-pt_post /evaluate -d '{"expression":"document.getElementById(\"username\").value"}'
-USERNAME_VALUE=$(echo "$RESULT" | jq -r '.result // empty')
-if echo "$USERNAME_VALUE" | grep -qi "enter"; then
-  echo -e "  ${RED}✗${NC} username contains 'Enter' text: $USERNAME_VALUE (bug #236)"
-  ((ASSERTIONS_FAILED++)) || true
-else
-  echo -e "  ${GREEN}✓${NC} username field clean: $USERNAME_VALUE"
-  ((ASSERTIONS_PASSED++)) || true
-fi
+assert_input_not_contains "#username" "Enter" "username should not contain 'Enter' (bug #236)"
 
 end_test
 
@@ -64,14 +56,6 @@ pt_post /action -d '{"kind":"press","key":"Tab"}'
 assert_ok "press Tab"
 
 # Verify username doesn't contain "Tab" text
-pt_post /evaluate -d '{"expression":"document.getElementById(\"username\").value"}'
-USERNAME_VALUE=$(echo "$RESULT" | jq -r '.result // empty')
-if echo "$USERNAME_VALUE" | grep -qi "tab"; then
-  echo -e "  ${RED}✗${NC} username contains 'Tab' text: $USERNAME_VALUE (bug #236)"
-  ((ASSERTIONS_FAILED++)) || true
-else
-  echo -e "  ${GREEN}✓${NC} username field has no 'Tab' text: $USERNAME_VALUE"
-  ((ASSERTIONS_PASSED++)) || true
-fi
+assert_input_not_contains "#username" "Tab" "username should not contain 'Tab' (bug #236)"
 
 end_test
