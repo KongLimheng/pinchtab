@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/pinchtab/pinchtab/internal/cli"
 	"github.com/pinchtab/pinchtab/internal/config"
+	"github.com/pinchtab/pinchtab/internal/server"
 	"github.com/spf13/cobra"
 )
 
@@ -12,14 +14,68 @@ var version = "dev"
 
 var rootCmd = &cobra.Command{
 	Use:   "pinchtab",
-	Short: "PinchTab - Browser for AI agents",
+	Short: "PinchTab - Browser control for AI agents",
 	Long: `PinchTab provides a lightweight, API-driven way for AI agents to control 
 browsers, manage tabs, and perform interactive tasks.`,
+	Example: `  pinchtab server
+  pinchtab nav https://pinchtab.com`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Default action: start the server
 		cfg := config.Load()
-		runDashboard(cfg)
+
+		if isInteractiveTerminal() {
+			cli.PrintStartupBanner(cfg, cli.StartupBannerOptions{
+				Mode:         "menu",
+				ListenStatus: menuListenStatus(cfg),
+			})
+
+			picked, err := promptSelect("Main Menu", []menuOption{
+				{label: "Start server", value: "server"},
+				{label: "Daemon", value: "daemon"},
+				{label: "Start bridge", value: "bridge"},
+				{label: "Start MCP server", value: "mcp"},
+				{label: "Config", value: "config"},
+				{label: "Security", value: "security"},
+				{label: "Help", value: "help"},
+				{label: "Exit", value: "exit"},
+			})
+
+			if err != nil || picked == "exit" || picked == "" {
+				return
+			}
+
+			switch picked {
+			case "server":
+				server.RunDashboard(cfg, version)
+			case "daemon":
+				handleDaemonCommand(cfg, "")
+			case "bridge":
+				server.RunBridgeServer(cfg)
+			case "mcp":
+				runMCP(cfg)
+			case "config":
+				handleConfigOverview(cfg)
+			case "security":
+				handleSecurityCommand(cfg)
+			case "help":
+				_ = cmd.Help()
+			}
+			return
+		}
+
+		// Fallback for non-interactive: start the server
+		server.RunDashboard(cfg, version)
 	},
+}
+
+func menuListenStatus(cfg *config.RuntimeConfig) string {
+	dashPort := cfg.Port
+	if dashPort == "" {
+		dashPort = "9870"
+	}
+	if server.CheckPinchTabRunning(dashPort, cfg.Token) {
+		return "running"
+	}
+	return "stopped"
 }
 
 func Execute() {
@@ -32,5 +88,14 @@ func Execute() {
 func init() {
 	rootCmd.Version = version
 	rootCmd.SetVersionTemplate("pinchtab {{.Version}}\n")
-	rootCmd.AddCommand(config.ConfigCmd)
+
+	// Grouping commands
+	primaryGroup := &cobra.Group{ID: "primary", Title: "Primary Commands"}
+	browserGroup := &cobra.Group{ID: "browser", Title: "Browser Control"}
+	mgmtGroup := &cobra.Group{ID: "management", Title: "Profiles and Instances"}
+	configGroup := &cobra.Group{ID: "config", Title: "Configuration & Setup"}
+
+	rootCmd.AddGroup(primaryGroup, browserGroup, mgmtGroup, configGroup)
+
+	cli.SetupUsage(rootCmd)
 }

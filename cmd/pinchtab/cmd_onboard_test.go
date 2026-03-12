@@ -1,12 +1,11 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/pinchtab/pinchtab/internal/config"
 )
 
 type fakeCommandRunner struct {
@@ -107,25 +106,6 @@ func TestEnsureOnboardConfigRecoversExistingSecuritySettings(t *testing.T) {
 	}
 }
 
-func TestRenderOnboardGuideIncludesSecurityValues(t *testing.T) {
-	cfg := testRuntimeConfig()
-	output := renderOnboardGuide("/tmp/pinchtab/config.json", cfg, onboardConfigCreated, true)
-
-	required := []string{
-		"Step 2/7  API access",
-		"server.bind  127.0.0.1",
-		"security.allowEvaluate  false",
-		"security.attach.enabled  false",
-		"security.idpi.strictMode  true",
-		"pinchtab daemon",
-	}
-	for _, needle := range required {
-		if !strings.Contains(output, needle) {
-			t.Fatalf("expected onboarding guide to contain %q\n%s", needle, output)
-		}
-	}
-}
-
 func TestSystemdUserManagerInstallWritesUnitAndEnablesService(t *testing.T) {
 	root := t.TempDir()
 	runner := &fakeCommandRunner{}
@@ -214,6 +194,46 @@ func TestLaunchdManagerInstallWritesPlistAndBootstrapsAgent(t *testing.T) {
 	}
 }
 
+func TestSystemdUserManagerPreflightRequiresUserSession(t *testing.T) {
+	runner := &fakeCommandRunner{
+		errors: map[string]error{
+			"systemctl --user show-environment": errors.New("exit status 1"),
+		},
+	}
+	manager := &systemdUserManager{
+		env:    daemonEnvironment{osName: "linux"},
+		runner: runner,
+	}
+
+	err := manager.Preflight()
+	if err == nil {
+		t.Fatal("expected preflight error")
+	}
+	if !strings.Contains(err.Error(), "working user systemd session") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestLaunchdManagerPreflightRequiresGUIDomain(t *testing.T) {
+	runner := &fakeCommandRunner{
+		errors: map[string]error{
+			"launchctl print gui/501": errors.New("exit status 113"),
+		},
+	}
+	manager := &launchdManager{
+		env:    daemonEnvironment{osName: "darwin", userID: "501"},
+		runner: runner,
+	}
+
+	err := manager.Preflight()
+	if err == nil {
+		t.Fatal("expected preflight error")
+	}
+	if !strings.Contains(err.Error(), "active launchd GUI session") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestNewDaemonManagerRejectsUnsupportedOS(t *testing.T) {
 	_, err := newDaemonManager(daemonEnvironment{osName: "windows"}, &fakeCommandRunner{})
 	if err == nil {
@@ -221,24 +241,44 @@ func TestNewDaemonManagerRejectsUnsupportedOS(t *testing.T) {
 	}
 }
 
-func testRuntimeConfig() *config.RuntimeConfig {
-	return &config.RuntimeConfig{
-		Bind:               "127.0.0.1",
-		Token:              "abcd1234efgh5678",
-		AllowEvaluate:      false,
-		AllowMacro:         false,
-		AllowScreencast:    false,
-		AllowDownload:      false,
-		AllowUpload:        false,
-		AttachEnabled:      false,
-		AttachAllowHosts:   []string{"127.0.0.1", "localhost", "::1"},
-		AttachAllowSchemes: []string{"ws", "wss"},
-		IDPI: config.IDPIConfig{
-			Enabled:        true,
-			AllowedDomains: []string{"127.0.0.1", "localhost", "::1"},
-			StrictMode:     true,
-			ScanContent:    true,
-			WrapContent:    true,
+func TestDaemonMenuOptions(t *testing.T) {
+	tests := []struct {
+		name      string
+		installed bool
+		running   bool
+		want      []string
+	}{
+		{
+			name:      "not installed",
+			installed: false,
+			running:   false,
+			want:      []string{"install", "exit"},
 		},
+		{
+			name:      "installed stopped",
+			installed: true,
+			running:   false,
+			want:      []string{"start", "uninstall", "exit"},
+		},
+		{
+			name:      "installed running",
+			installed: true,
+			running:   true,
+			want:      []string{"stop", "restart", "uninstall", "exit"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := daemonMenuOptions(tt.installed, tt.running)
+			if len(got) != len(tt.want) {
+				t.Fatalf("len(daemonMenuOptions()) = %d, want %d", len(got), len(tt.want))
+			}
+			for i, want := range tt.want {
+				if got[i].value != want {
+					t.Fatalf("daemonMenuOptions()[%d] = %q, want %q", i, got[i].value, want)
+				}
+			}
+		})
 	}
 }

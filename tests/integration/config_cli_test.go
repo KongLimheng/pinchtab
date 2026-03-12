@@ -14,8 +14,7 @@ import (
 // TestConfigCLI_Init tests `pinchtab config init`
 func TestConfigCLI_Init(t *testing.T) {
 	tmpDir := t.TempDir()
-	// config init writes to userConfigDir() which is $HOME/.pinchtab on macOS (legacy path)
-	// or ~/Library/Application Support/pinchtab (new path). Create the legacy dir so it's used.
+	// Create the legacy dir so config.DefaultConfigPath() resolves there.
 	legacyDir := filepath.Join(tmpDir, ".pinchtab")
 	if err := os.MkdirAll(legacyDir, 0755); err != nil {
 		t.Fatal(err)

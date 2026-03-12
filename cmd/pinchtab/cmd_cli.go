@@ -3,23 +3,21 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
-	"github.com/pinchtab/pinchtab/internal/browsercli"
+	browseractions "github.com/pinchtab/pinchtab/internal/cli/actions"
 	"github.com/pinchtab/pinchtab/internal/config"
 	"github.com/spf13/cobra"
 )
 
 var quickCmd = &cobra.Command{
 	Use:   "quick <url>",
-	Short: "Navigate + analyze page (beginner-friendly)",
+	Short: "Navigate + analyze page",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Quick(client, base, token, args)
+			browseractions.Quick(client, base, token, args)
 		})
 	},
 }
@@ -31,7 +29,7 @@ var navCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Navigate(client, base, token, args)
+			browseractions.Navigate(client, base, token, args)
 		})
 	},
 }
@@ -42,7 +40,7 @@ var snapCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Snapshot(client, base, token, args)
+			browseractions.Snapshot(client, base, token, args)
 		})
 	},
 }
@@ -54,7 +52,7 @@ var clickCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Action(client, base, token, "click", args)
+			browseractions.Action(client, base, token, "click", args)
 		})
 	},
 }
@@ -66,7 +64,7 @@ var typeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Action(client, base, token, "type", args)
+			browseractions.Action(client, base, token, "type", args)
 		})
 	},
 }
@@ -77,7 +75,7 @@ var screenshotCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Screenshot(client, base, token, args)
+			browseractions.Screenshot(client, base, token, args)
 		})
 	},
 }
@@ -88,7 +86,7 @@ var tabsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Tabs(client, base, token, args)
+			browseractions.Tabs(client, base, token, args)
 		})
 	},
 }
@@ -99,7 +97,7 @@ var instancesCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Instances(client, base, token)
+			browseractions.Instances(client, base, token)
 		})
 	},
 }
@@ -110,7 +108,7 @@ var healthCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Health(client, base, token)
+			browseractions.Health(client, base, token)
 		})
 	},
 }
@@ -122,7 +120,7 @@ var pressCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Action(client, base, token, "press", args)
+			browseractions.Action(client, base, token, "press", args)
 		})
 	},
 }
@@ -134,7 +132,7 @@ var fillCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Action(client, base, token, "fill", args)
+			browseractions.Action(client, base, token, "fill", args)
 		})
 	},
 }
@@ -146,7 +144,7 @@ var hoverCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Action(client, base, token, "hover", args)
+			browseractions.Action(client, base, token, "hover", args)
 		})
 	},
 }
@@ -158,7 +156,7 @@ var scrollCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Action(client, base, token, "scroll", args)
+			browseractions.Action(client, base, token, "scroll", args)
 		})
 	},
 }
@@ -170,7 +168,7 @@ var evalCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Evaluate(client, base, token, args)
+			browseractions.Evaluate(client, base, token, args)
 		})
 	},
 }
@@ -181,7 +179,7 @@ var pdfCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.PDF(client, base, token, args)
+			browseractions.PDF(client, base, token, args)
 		})
 	},
 }
@@ -192,7 +190,7 @@ var textCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Text(client, base, token, args)
+			browseractions.Text(client, base, token, args)
 		})
 	},
 }
@@ -203,7 +201,7 @@ var profilesCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.Load()
 		runCLIWith(cfg, func(client *http.Client, base, token string) {
-			browsercli.Profiles(client, base, token)
+			browseractions.Profiles(client, base, token)
 		})
 	},
 }
@@ -214,6 +212,24 @@ var instanceCmd = &cobra.Command{
 }
 
 func init() {
+	quickCmd.GroupID = "browser"
+	navCmd.GroupID = "browser"
+	snapCmd.GroupID = "browser"
+	clickCmd.GroupID = "browser"
+	typeCmd.GroupID = "browser"
+	screenshotCmd.GroupID = "browser"
+	tabsCmd.GroupID = "browser"
+	instancesCmd.GroupID = "management"
+	healthCmd.GroupID = "management"
+	pressCmd.GroupID = "browser"
+	fillCmd.GroupID = "browser"
+	hoverCmd.GroupID = "browser"
+	scrollCmd.GroupID = "browser"
+	evalCmd.GroupID = "browser"
+	pdfCmd.GroupID = "browser"
+	textCmd.GroupID = "browser"
+	profilesCmd.GroupID = "management"
+
 	rootCmd.AddCommand(quickCmd)
 	rootCmd.AddCommand(navCmd)
 	rootCmd.AddCommand(snapCmd)
@@ -232,6 +248,7 @@ func init() {
 	rootCmd.AddCommand(textCmd)
 	rootCmd.AddCommand(profilesCmd)
 
+	instanceCmd.GroupID = "management"
 	instanceCmd.AddCommand(&cobra.Command{
 		Use:   "start <name>",
 		Short: "Start a browser instance",
@@ -239,7 +256,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := config.Load()
 			runCLIWith(cfg, func(client *http.Client, base, token string) {
-				browsercli.InstanceStart(client, base, token, args)
+				browseractions.InstanceStart(client, base, token, args)
 			})
 		},
 	})
@@ -250,7 +267,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := config.Load()
 			runCLIWith(cfg, func(client *http.Client, base, token string) {
-				browsercli.InstanceNavigate(client, base, token, args)
+				browseractions.InstanceNavigate(client, base, token, args)
 			})
 		},
 	})
@@ -261,7 +278,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := config.Load()
 			runCLIWith(cfg, func(client *http.Client, base, token string) {
-				browsercli.InstanceStop(client, base, token, args)
+				browseractions.InstanceStop(client, base, token, args)
 			})
 		},
 	})
@@ -272,7 +289,7 @@ func init() {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := config.Load()
 			runCLIWith(cfg, func(client *http.Client, base, token string) {
-				browsercli.InstanceLogs(client, base, token, args)
+				browseractions.InstanceLogs(client, base, token, args)
 			})
 		},
 	})
@@ -289,160 +306,4 @@ func runCLIWith(cfg *config.RuntimeConfig, fn func(client *http.Client, base, to
 	token := cfg.Token
 
 	fn(client, base, token)
-}
-
-func printHelp() {
-	renderCLIHelp()
-}
-
-var cliCommands = map[string]bool{
-	"nav": true, "navigate": true,
-	"snap": true, "snapshot": true,
-	"click": true, "type": true, "press": true, "fill": true,
-	"hover": true, "scroll": true, "select": true, "focus": true,
-	"text": true, "tabs": true, "tab": true,
-	"screenshot": true, "ss": true,
-	"eval": true, "evaluate": true,
-	"pdf": true, "health": true,
-	"help": true, "quick": true,
-	"instance": true, "instances": true,
-	"profiles": true,
-}
-
-func isCLICommand(cmd string) bool {
-	return cliCommands[cmd]
-}
-
-func runCLI(cfg *config.RuntimeConfig) {
-	cmd := os.Args[1]
-	rawArgs := os.Args[2:]
-
-	var instanceID string
-	args := make([]string, 0, len(rawArgs))
-	for i := 0; i < len(rawArgs); i++ {
-		if (rawArgs[i] == "--instance" || rawArgs[i] == "-I") && i+1 < len(rawArgs) {
-			instanceID = rawArgs[i+1]
-			i++
-		} else {
-			args = append(args, rawArgs[i])
-		}
-	}
-
-	orchBase := fmt.Sprintf("http://%s:%s", cfg.Bind, cfg.Port)
-	if envURL := os.Getenv("PINCHTAB_URL"); envURL != "" {
-		orchBase = strings.TrimRight(envURL, "/")
-	}
-
-	token := cfg.Token
-	if envToken := os.Getenv("PINCHTAB_TOKEN"); envToken != "" {
-		token = envToken
-	}
-
-	base := orchBase
-	if instanceID != "" {
-		base = browsercli.ResolveInstanceBase(orchBase, token, instanceID, cfg.Bind)
-	}
-
-	client := &http.Client{Timeout: 30 * time.Second}
-
-	if cmd != "help" {
-		if !browsercli.CheckServerAndGuide(client, base, token) {
-			return
-		}
-	}
-
-	switch cmd {
-	case "nav", "navigate":
-		browsercli.Navigate(client, base, token, args)
-	case "snap", "snapshot":
-		browsercli.Snapshot(client, base, token, args)
-	case "click", "type", "press", "fill", "hover", "scroll", "select", "focus":
-		browsercli.Action(client, base, token, cmd, args)
-	case "text":
-		browsercli.Text(client, base, token, args)
-	case "tabs", "tab":
-		browsercli.Tabs(client, base, token, args)
-	case "screenshot", "ss":
-		browsercli.Screenshot(client, base, token, args)
-	case "eval", "evaluate":
-		browsercli.Evaluate(client, base, token, args)
-	case "pdf":
-		browsercli.PDF(client, base, token, args)
-	case "health":
-		browsercli.Health(client, base, token)
-	case "instance":
-		browsercli.Instance(client, base, token, args)
-	case "instances":
-		browsercli.Instances(client, base, token)
-	case "profiles":
-		browsercli.Profiles(client, base, token)
-	case "quick":
-		browsercli.Quick(client, base, token, args)
-	case "help":
-		cliHelp()
-	}
-}
-
-func cliHelp() {
-	renderCLIHelp()
-	os.Exit(0)
-}
-
-func renderCLIHelp() {
-	fmt.Print(`Pinchtab CLI - browser control from the command line
-
-Usage: pinchtab <command> [args] [flags]
-
-QUICK START:
-  pinchtab quick <url>    Navigate and show page structure (combines nav + snap)
-
-WORKFLOW:
-  1. Start server:        pinchtab                  (or: pinchtab server)
-  2. Navigate:           pinchtab nav https://pinchtab.com
-  3. See page:           pinchtab snap             (shows clickable refs)
-  4. Interact:           pinchtab click e5         (click element)
-  5. Check result:       pinchtab snap             (see changes)
-
-Commands:
-  quick <url>             Navigate and analyze page (beginner-friendly)
-
-  INSTANCE MANAGEMENT:
-  instance launch         Create new instance (--mode headed, --port 9999)
-  instance logs <id>      Get instance logs (for debugging)
-  instance stop <id>      Stop instance
-  instances               List all running instances
-
-  BROWSER CONTROL:
-  nav, navigate <url>     Navigate to URL (--new-tab, --block-images, --block-ads)
-  snap, snapshot          Accessibility tree snapshot (-i, -c, -d, --max-tokens N)
-  click <ref>             Click element by ref
-  type <ref> <text>       Type text into element
-  fill <ref> <text>       Set input value (no key events)
-  press <key>             Press a key (Enter, Tab, Escape, ...)
-  hover <ref>             Hover over element
-  scroll <direction>      Scroll page (up, down, left, right)
-  select <ref> <value>    Select dropdown option
-  focus <ref>             Focus element
-  text                    Extract page text (--raw for innerText)
-  tabs                    List open tabs
-  tabs new <url>          Open new tab
-  tabs close <tabId>      Close tab
-  ss, screenshot          Take screenshot (-o file, -q quality)
-  eval <expression>       Evaluate JavaScript
-  pdf                     Export page as PDF (-o file, --landscape, --scale N)
-
-  OTHER:
-  health                  Server health check
-  help                    Show this help
-
-Environment:
-  PINCHTAB_URL            Server URL (default: http://localhost:9867)
-  PINCHTAB_TOKEN          Auth token (sent as Bearer)
-
-Flags (global):
-  --instance <id>, -I <id>  Target a specific instance (e.g., pinchtab snap --instance abc123)
-
-Pipe with jq:
-  pinchtab snap -i | jq '.nodes[] | select(.role=="link")'
-`)
 }

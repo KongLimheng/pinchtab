@@ -6,13 +6,13 @@ PinchTab can run as a user-level background service (daemon) on both macOS (`lau
 
 ## Quick Start
 
-The easiest way to set up the daemon is through the interactive onboarding:
+The normal entrypoints are:
 
 ```bash
-pinchtab onboard --install-daemon
+pinchtab
 ```
 
-If you already have PinchTab configured, you can manage the service directly:
+Then choose `Daemon` from the menu, or manage the service directly:
 
 ```bash
 pinchtab daemon
@@ -44,6 +44,15 @@ The `pinchtab daemon` command provides a comprehensive overview of the service:
 ## Manual Installation
 
 If the automated commands fail due to permission issues or system restrictions, PinchTab provides manual instructions tailored to your OS.
+
+PinchTab now fails fast before install when the current session cannot manage a user service.
+
+Typical cases:
+
+- Linux shell without a working `systemctl --user` session
+- macOS shell without an active GUI `launchd` domain
+
+In those cases, use the manual steps below or run `pinchtab server` in the foreground instead.
 
 ### macOS (launchd)
 Service file: `~/Library/LaunchAgents/com.pinchtab.pinchtab.plist`

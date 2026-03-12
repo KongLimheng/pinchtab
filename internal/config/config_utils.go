@@ -39,6 +39,12 @@ func userConfigDir() string {
 	return newPath
 }
 
+// DefaultConfigPath returns the default config file location used when
+// PINCHTAB_CONFIG is not explicitly set.
+func DefaultConfigPath() string {
+	return filepath.Join(userConfigDir(), "config.json")
+}
+
 func dirExists(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {

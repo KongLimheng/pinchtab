@@ -142,9 +142,12 @@ func setupAllocator(cfg *config.RuntimeConfig) (context.Context, context.CancelF
 	opts = append(opts,
 		chromedp.Flag("disable-automation", ""),
 		chromedp.Flag("disable-blink-features", "AutomationControlled"),
+		chromedp.Flag("disable-session-crashed-bubble", ""),
 		chromedp.Flag("disable-dev-shm-usage", ""),
+		chromedp.Flag("hide-crash-restore-bubble", ""),
 		chromedp.Flag("no-first-run", ""),
 		chromedp.Flag("no-default-browser-check", ""),
+		chromedp.Flag("noerrdialogs", ""),
 	)
 
 	// Extension loading
@@ -459,9 +462,11 @@ func buildChromeArgs(cfg *config.RuntimeConfig, port int) []string {
 		"--disable-background-timer-throttling",
 		"--disable-backgrounding-occluded-windows",
 		"--disable-breakpad",
+		"--disable-session-crashed-bubble",
 		"--disable-client-side-phishing-detection",
 		"--disable-default-apps",
 		"--disable-dev-shm-usage",
+		"--hide-crash-restore-bubble",
 		"--disable-hang-monitor",
 		"--disable-ipc-flooding-protection",
 		"--disable-popup-blocking",
@@ -472,6 +477,7 @@ func buildChromeArgs(cfg *config.RuntimeConfig, port int) []string {
 		"--metrics-recording-only",
 		"--no-first-run",
 		"--no-default-browser-check",
+		"--noerrdialogs",
 		"--safebrowsing-disable-auto-update",
 		"--password-store=basic",
 		"--use-mock-keychain",

@@ -5,9 +5,9 @@ package integration
 // IDPI integration tests — indirect prompt injection defence on /find and /pdf.
 //
 // Each test group spins up an isolated pinchtab server configured with specific
-// IDPI settings via testutil.NewTestServer. Headed mode (Headless: false) is
-// intentional: the browser is visible so the effect of each defence can be
-// observed during development and code review.
+// IDPI settings via testutil.NewTestServer. Tests run headless by default to
+// keep CI and local runs quiet; set PINCHTAB_TEST_HEADED=1 when you explicitly
+// want a visible browser for debugging.
 //
 // Test naming follows the pattern:
 //
@@ -44,8 +44,7 @@ func idpiCfg(enabled, scan, strict bool, custom ...string) appconfig.IDPIConfig 
 
 // newIDPIServer builds a ServerConfig for IDPI integration tests and starts a
 // server using testutil.NewTestServer. Cleanup is registered automatically via
-// t.Cleanup. Headed mode is always active because the user wants to monitor
-// test runs in a visible browser.
+// t.Cleanup. Visible Chrome is opt-in via PINCHTAB_TEST_HEADED=1.
 func newIDPIServer(t *testing.T, cfg appconfig.IDPIConfig) *testutil.Client {
 	t.Helper()
 	port, err := testutil.GetFreePort()
@@ -54,7 +53,7 @@ func newIDPIServer(t *testing.T, cfg appconfig.IDPIConfig) *testutil.Client {
 	}
 	sc := testutil.DefaultConfig()
 	sc.Port = port
-	sc.Headless = false // headed mode: visible Chrome for development monitoring
+	sc.Headless = !testutil.IntegrationHeaded()
 	sc.IDPI = cfg
 	srv := testutil.NewTestServer(t, sc)
 	return testutil.NewClient(srv.URL)

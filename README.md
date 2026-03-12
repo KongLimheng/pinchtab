@@ -113,8 +113,16 @@ docker run -d \
 
 **Terminal 1 — Start the server:**
 ```bash
-pinchtab
+pinchtab server
 ```
+
+**Recommended for daily local use — install the daemon once:**
+```bash
+pinchtab daemon install
+pinchtab daemon
+```
+
+That keeps PinchTab running in the background so your agent tools can reuse it without an open terminal.
 
 **Terminal 2 — Control the browser:**
 ```bash
