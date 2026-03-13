@@ -34,6 +34,48 @@ assert_exit_code 2 "unknown subcommand rejected"
 end_test
 
 # ─────────────────────────────────────────────────────────────────
+start_test "pinchtab daemon start (fails without service manager)"
+
+pt daemon start
+if [ "$PT_CODE" -ne 0 ]; then
+  echo -e "  ${GREEN}✓${NC} start fails gracefully without service manager (exit $PT_CODE)"
+  ((ASSERTIONS_PASSED++)) || true
+else
+  echo -e "  ${RED}✗${NC} daemon start unexpectedly succeeded"
+  ((ASSERTIONS_FAILED++)) || true
+fi
+
+end_test
+
+# ─────────────────────────────────────────────────────────────────
+start_test "pinchtab daemon stop (fails without service manager)"
+
+pt daemon stop
+if [ "$PT_CODE" -ne 0 ]; then
+  echo -e "  ${GREEN}✓${NC} stop fails gracefully without service manager (exit $PT_CODE)"
+  ((ASSERTIONS_PASSED++)) || true
+else
+  echo -e "  ${RED}✗${NC} daemon stop unexpectedly succeeded"
+  ((ASSERTIONS_FAILED++)) || true
+fi
+
+end_test
+
+# ─────────────────────────────────────────────────────────────────
+start_test "pinchtab daemon restart (fails without service manager)"
+
+pt daemon restart
+if [ "$PT_CODE" -ne 0 ]; then
+  echo -e "  ${GREEN}✓${NC} restart fails gracefully without service manager (exit $PT_CODE)"
+  ((ASSERTIONS_PASSED++)) || true
+else
+  echo -e "  ${RED}✗${NC} daemon restart unexpectedly succeeded"
+  ((ASSERTIONS_FAILED++)) || true
+fi
+
+end_test
+
+# ─────────────────────────────────────────────────────────────────
 start_test "pinchtab daemon uninstall (graceful when not installed)"
 
 pt daemon uninstall
