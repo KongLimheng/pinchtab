@@ -30,14 +30,27 @@ func userConfigDir() string {
 
 	newPath := filepath.Join(configDir, "pinchtab")
 
-	legacyExists := dirExists(legacyPath)
-	newExists := dirExists(newPath)
+	// Priority 1: Check for config FILE (handles case where both dirs exist
+	// but only legacy has config.json — the issue #224 scenario)
+	legacyConfig := filepath.Join(legacyPath, "config.json")
+	newConfig := filepath.Join(newPath, "config.json")
 
-	if legacyExists && !newExists {
+	if fileExists(legacyConfig) && !fileExists(newConfig) {
+		return legacyPath
+	}
+
+	// Priority 2: Check for DIRECTORY (handles init scenario where
+	// legacy dir exists from npm install but no config yet)
+	if dirExists(legacyPath) && !dirExists(newPath) {
 		return legacyPath
 	}
 
 	return newPath
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }
 
 // DefaultConfigPath returns the default config file location used when
