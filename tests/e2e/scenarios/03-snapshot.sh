@@ -223,7 +223,7 @@ assert_json_contains "$RESULT" '.url' "form.html" "tab B has form.html URL"
 # Text from tab A
 pt_get "/text?tabId=${TAB_A}&format=text"
 assert_ok "text tab A"
-assert_contains "$RESULT" "E2E Test Suite" "tab A text matches index.html"
+assert_contains "$RESULT" "test fixtures" "tab A text matches index.html"
 
 # Text from tab B
 pt_get "/text?tabId=${TAB_B}&format=text"
